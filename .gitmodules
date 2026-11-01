@@ -1,0 +1,3 @@
+[submodule "modules/moneybee-risk-datasources"]
+	path = modules/moneybee-risk-datasources
+	url = https://github.com/Punitthakker/moneybee-risk-datasources
