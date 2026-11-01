@@ -52,5 +52,24 @@ export async function selfTest(transport: Transport) {
       } catch (e) { log(`rpc ${url}`, { error: e instanceof Error ? e.message : String(e) }); }
     }
   }
+  // wider probe through publicnode + Blockscout cross-check
+  const rpc = "https://ethereum-rpc.publicnode.com";
+  const call = async (method: string, params: unknown[]) => { const r = await fetch(rpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) }); return ((await r.json()) as { result?: unknown; error?: unknown }); };
+  log("chainId", await call("eth_chainId", []));
+  log("blockNumber", await call("eth_blockNumber", []));
+  const BAL = parseAbi(["function balanceOf(address) view returns (uint256)"]);
+  const addrs: Record<string, Hex> = { zero: "0x0000000000000000000000000000000000000000", one: ONE, ones: "0x1111111111111111111111111111111111111111", binance14: BINANCE14, usdtSelf: USDT, vitalik: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" };
+  for (const [n, a] of Object.entries(addrs)) {
+    log(`usdt.isBlackListed(${n})`, (await call("eth_call", [{ to: USDT, data: encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [a] }) }, "latest"])).result);
+  }
+  log("usdt.balanceOf(binance14)", (await call("eth_call", [{ to: USDT, data: encodeFunctionData({ abi: BAL, functionName: "balanceOf", args: [BINANCE14] }) }, "latest"])).result);
+  log("usdc.isBlacklisted(vitalik)", (await call("eth_call", [{ to: USDC, data: encodeFunctionData({ abi: ABI, functionName: "isBlacklisted", args: [addrs.vitalik!] }) }, "latest"])).result);
+  for (const [n, a] of [["one", ONE], ["binance14", BINANCE14]] as const) {
+    try {
+      const d = encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [a] });
+      const r = await fetch(`https://eth.blockscout.com/api?module=proxy&action=eth_call&to=${USDT}&data=${d}&tag=latest`);
+      log(`blockscout usdt.isBlackListed(${n})`, await r.text());
+    } catch (e) { log("blockscout", { error: String(e) }); }
+  }
   log("done", "ok");
 }
