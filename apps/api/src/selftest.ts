@@ -1,75 +1,30 @@
-/** Boot-time live self-test. Logs raw bytes so a remote reader can diagnose without RPC access. */
-import { encodeFunctionData, parseAbi, type Hex } from "viem";
-import type { Transport } from "@cr/datasources";
-import { OfacAdapter, SanctionsOracleAdapter } from "@cr/datasources";
+/** Boot-time live self-test with stable controls. Logged, never fatal. */
+import { encodeFunctionData, decodeFunctionResult, parseAbi, type Hex } from "viem";
+import { OfacAdapter, SanctionsOracleAdapter, type Transport } from "@cr/datasources";
 
-const ABI = parseAbi([
-  "function isBlackListed(address) view returns (bool)",
-  "function isBlacklisted(address) view returns (bool)",
-  "function symbol() view returns (string)",
-  "function getBlackListStatus(address) view returns (bool)",
-]);
+const ABI = parseAbi(["function isBlackListed(address) view returns (bool)", "function symbol() view returns (string)"]);
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7" as Hex;
-const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Hex;
-const BINANCE14 = "0x28C6c06298d514Db089934071355E5743bf21d60" as Hex;
-const ONE = "0x0000000000000000000000000000000000000001" as Hex;
+/** Tether permanently blacklists the 0x1 sink address, so it is a stable positive control for the freeze read. */
+const FREEZE_POSITIVE = "0x0000000000000000000000000000000000000001" as Hex;
+const FREEZE_NEGATIVE = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" as Hex; // vitalik.eth
 
 export async function selfTest(transport: Transport) {
   const log = (k: string, v: unknown) => console.log(`[selftest] ${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
   if (transport.mode !== "live") { log("skipped", "transport is not live"); return; }
-  const calls: [string, Hex, Hex][] = [
-    ["usdt.symbol", USDT, encodeFunctionData({ abi: ABI, functionName: "symbol" })],
-    ["usdt.isBlackListed(binance14)", USDT, encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [BINANCE14] })],
-    ["usdt.isBlackListed(0x1)", USDT, encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [ONE] })],
-    ["usdt.getBlackListStatus(binance14)", USDT, encodeFunctionData({ abi: ABI, functionName: "getBlackListStatus", args: [BINANCE14] })],
-    ["usdc.isBlacklisted(binance14)", USDC, encodeFunctionData({ abi: ABI, functionName: "isBlacklisted", args: [BINANCE14] })],
-    ["usdc.isBlacklisted(0x1)", USDC, encodeFunctionData({ abi: ABI, functionName: "isBlacklisted", args: [ONE] })],
-  ];
-  for (const [name, to, data] of calls) {
-    try { log(name, { data, raw: await transport.evmCall("ethereum", to, data) }); }
-    catch (e) { log(name, { data, error: e instanceof Error ? e.message : String(e) }); }
-  }
+  const out: Record<string, unknown> = {};
   try {
-    const ofac = await new OfacAdapter(transport).load();
-    log("ofac.counts", Object.fromEntries(Object.entries(ofac.lists).map(([k, v]) => [k, v.length])));
-    const pos = ofac.lists.ETH?.[0];
-    if (pos) {
-      const o = new SanctionsOracleAdapter(transport);
-      log("oracle.positive", { addr: pos, r: (await o.screen(pos, "ethereum")).facts });
-      log("oracle.negative", { addr: ONE, r: (await o.screen(ONE, "ethereum")).facts });
-    }
-  } catch (e) { log("ofac/oracle", { error: e instanceof Error ? e.message : String(e) }); }
-  // per-RPC probe: which endpoint answers what
-  const { CHAINS } = await import("@cr/shared");
-  const probe = encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [ONE] });
-  const probe2 = encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [BINANCE14] });
-  for (const url of CHAINS.ethereum.rpcs) {
-    for (const [n, d] of [["0x1", probe], ["binance14", probe2]] as const) {
-      try {
-        const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: USDT, data: d }, "latest"] }) });
-        const j = (await r.json()) as { result?: string; error?: unknown };
-        log(`rpc ${url} isBlackListed(${n})`, j.result ?? j.error);
-      } catch (e) { log(`rpc ${url}`, { error: e instanceof Error ? e.message : String(e) }); }
-    }
-  }
-  // wider probe through publicnode + Blockscout cross-check
-  const rpc = "https://ethereum-rpc.publicnode.com";
-  const call = async (method: string, params: unknown[]) => { const r = await fetch(rpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) }); return ((await r.json()) as { result?: unknown; error?: unknown }); };
-  log("chainId", await call("eth_chainId", []));
-  log("blockNumber", await call("eth_blockNumber", []));
-  const BAL = parseAbi(["function balanceOf(address) view returns (uint256)"]);
-  const addrs: Record<string, Hex> = { zero: "0x0000000000000000000000000000000000000000", one: ONE, ones: "0x1111111111111111111111111111111111111111", binance14: BINANCE14, usdtSelf: USDT, vitalik: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" };
-  for (const [n, a] of Object.entries(addrs)) {
-    log(`usdt.isBlackListed(${n})`, (await call("eth_call", [{ to: USDT, data: encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [a] }) }, "latest"])).result);
-  }
-  log("usdt.balanceOf(binance14)", (await call("eth_call", [{ to: USDT, data: encodeFunctionData({ abi: BAL, functionName: "balanceOf", args: [BINANCE14] }) }, "latest"])).result);
-  log("usdc.isBlacklisted(vitalik)", (await call("eth_call", [{ to: USDC, data: encodeFunctionData({ abi: ABI, functionName: "isBlacklisted", args: [addrs.vitalik!] }) }, "latest"])).result);
-  for (const [n, a] of [["one", ONE], ["binance14", BINANCE14]] as const) {
-    try {
-      const d = encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [a] });
-      const r = await fetch(`https://eth.blockscout.com/api?module=proxy&action=eth_call&to=${USDT}&data=${d}&tag=latest`);
-      log(`blockscout usdt.isBlackListed(${n})`, await r.text());
-    } catch (e) { log("blockscout", { error: String(e) }); }
-  }
-  log("done", "ok");
+    const sym = decodeFunctionResult({ abi: ABI, functionName: "symbol", data: await transport.evmCall("ethereum", USDT, encodeFunctionData({ abi: ABI, functionName: "symbol" })) });
+    const pos = decodeFunctionResult({ abi: ABI, functionName: "isBlackListed", data: await transport.evmCall("ethereum", USDT, encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [FREEZE_POSITIVE] })) });
+    const neg = decodeFunctionResult({ abi: ABI, functionName: "isBlackListed", data: await transport.evmCall("ethereum", USDT, encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [FREEZE_NEGATIVE] })) });
+    out.freeze = { symbol: sym, positiveControl: pos, negativeControl: neg, ok: sym === "USDT" && pos === true && neg === false };
+  } catch (e) { out.freeze = { error: e instanceof Error ? e.message : String(e) }; }
+  try {
+    const snap = await new OfacAdapter(transport).load();
+    const first = snap.lists.ETH?.[0];
+    const o = new SanctionsOracleAdapter(transport);
+    const pos = first ? (await o.screen(first, "ethereum")).facts?.sanctioned : null;
+    const neg = (await o.screen(FREEZE_NEGATIVE, "ethereum")).facts?.sanctioned;
+    out.sanctions = { ofacEth: snap.lists.ETH?.length ?? 0, ofacTrx: snap.lists.TRX?.length ?? 0, oraclePositive: pos, oracleNegative: neg, ok: pos === true && neg === false };
+  } catch (e) { out.sanctions = { error: e instanceof Error ? e.message : String(e) }; }
+  log("result", out);
 }

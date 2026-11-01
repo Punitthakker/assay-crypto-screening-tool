@@ -24,6 +24,12 @@ Status key: VERIFIED (confirmed against issuer source today), LIVE-CHECK (addres
 | BNB Chain | USDT | `0x55d398326f99059fF775485246999027B3197955` | none | N/A | Binance-Peg BSC-USD, 18 decimals, issued by Binance, not Tether. Report must say "bridged asset, issuer freeze not applicable, Binance custody risk applies". |
 | BNB Chain | USDC | `0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d` | none | N/A | Binance-Peg USDC. Circle does not list BNB Chain. Same treatment. |
 
+## Live findings (Railway, 2026-11-01)
+
+- Tether blacklists the sink addresses `0x0`, `0x1` and the USDT contract itself. `0x…0001` is used as the permanent positive control for the freeze read.
+- `0x28C6c06298d514Db089934071355E5743bf21d60` (Binance 14) is blacklisted by both Tether and Circle following the 2026 Binance hot-wallet hack. Public label databases still tag it as a Binance hot wallet. The engine returns BLOCK; the label is kept for context only.
+- `eth.llamarpc.com` returned HTML and `cloudflare-eth.com` returned internal errors; both removed from the rotation. `publicnode` and `1rpc` agree on every control.
+
 ## Sanctions
 
 | Source | Endpoint / contract | Status | Note |

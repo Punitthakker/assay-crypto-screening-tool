@@ -3,10 +3,10 @@
     "address": "0x28C6c06298d514Db089934071355E5743bf21d60",
     "chainFamily": "evm",
     "category": "exchange_licensed",
-    "name": "Binance 14 (hot wallet)",
+    "name": "Binance 14 (hot wallet, compromised in the 2026 Binance hack; frozen by Tether and Circle)",
     "jurisdiction": "AE",
     "licence": "VARA VASP licence (Binance FZE, Dubai)",
-    "source": "seed:public-explorer-tag"
+    "source": "seed:public-explorer-tag; freeze verified live 2026-11-01"
   },
   {
     "address": "0x21a31Ee1afC51d94C2eFcCAa2092aD1028285549",

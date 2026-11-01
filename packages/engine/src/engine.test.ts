@@ -21,10 +21,16 @@ describe("control cases (SCORING.md)", () => {
   });
 
   it("licensed exchange hot wallet scores CLEAR and is flagged as a VASP", async () => {
-    const r = await engine.screen({ address: "0x28C6c06298d514Db089934071355E5743bf21d60", chain: "ethereum", asset: "USDT" });
+    const r = await engine.screen({ address: "0x21a31Ee1afC51d94C2eFcCAa2092aD1028285549", chain: "ethereum", asset: "USDT" });
     expect(r.verdict).toBe("CLEAR");
     expect(r.score).toBeLessThan(20);
     expect(r.flags).toContain("SENDER_IS_LICENSED_VASP");
+  });
+
+  it("a labelled exchange wallet that the issuer has frozen is still a hard BLOCK (Binance 14, verified live 2026-11-01)", async () => {
+    const r = await engine.screen({ address: "0x28C6c06298d514Db089934071355E5743bf21d60", chain: "ethereum", asset: "USDT" });
+    expect(r.hardBlock).toBe("HB_FROZEN");
+    expect(r.flags).toContain("SENDER_IS_LICENSED_VASP"); // label survives, verdict does not soften
   });
 
   it("OFAC-listed sender is a hard BLOCK from the list, with oracle agreeing", async () => {

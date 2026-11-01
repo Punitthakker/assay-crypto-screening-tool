@@ -461,12 +461,19 @@ const sessions=[
   ["dim","sources   agree  discrepancy=false"]]},
  {cmd:"assay screen 0x28C6c06298d514Db089934071355E5743bf21d60 --chain ethereum --asset USDT",steps:[
   ["dim","resolve   ethereum / USDT / 0xdAC17F…831ec7 (Tether, native)"],
-  ["scan","freeze    isBlackListed(address) …"],["g","freeze    false"],
+  ["g","label     Binance 14 hot wallet  exchange_licensed  AE"],
+  ["scan","freeze    isBlackListed(address) …"],["r","freeze    TRUE  frozen by Tether after the 2026 Binance hack"],
   ["scan","sanctions ofac-sdn + oracle …"],["g","sanctions clean on both sources"],
-  ["g","label     Binance 14 hot wallet  exchange_licensed  AE  VARA"],
-  ["hops","trace     boundary reached at licensed VASP"],
+  ["V","BLOCK",100,"HB_FROZEN"],
+  ["r","BLOCK     Label says exchange. Chain says frozen. Chain wins."],
+  ["dim","verified  live on Ethereum mainnet, 2026-11-01"]]},
+ {cmd:"assay screen 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 --chain ethereum --asset USDT",steps:[
+  ["dim","resolve   ethereum / USDT / 0xdAC17F…831ec7 (Tether, native)"],
+  ["scan","freeze    isBlackListed(address) …"],["g","freeze    false"],
+  ["scan","sanctions ofac-sdn 123 ETH entries + oracle …"],["g","sanctions clean on both sources"],
+  ["hops","trace     hop 1/2 counterparties"],
   ["V","CLEAR",0,""],
-  ["dim","flag      SENDER_IS_LICENSED_VASP"]]},
+  ["dim","sha256    7c1e…a90f  confidence medium"]]},
  {cmd:"assay screen 0x1111111111111111111111111111111111111111 --chain base --asset USDC --amount 25000",steps:[
   ["dim","resolve   base / USDC / 0x833589…A02913 (Circle, native)"],
   ["scan","freeze    isBlacklisted(address) …"],["g","freeze    false"],

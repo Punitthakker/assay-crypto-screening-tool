@@ -40,8 +40,8 @@ export const CHAINS: Record<ChainId, ChainDef> = {
     nativeSymbol: "ETH",
     rpcs: [
       "https://ethereum-rpc.publicnode.com",
-      "https://eth.llamarpc.com",
-      "https://cloudflare-eth.com",
+      "https://eth.drpc.org",
+      "https://rpc.flashbots.net",
       "https://1rpc.io/eth",
     ],
     sanctionsOracle: ORACLE_DEFAULT,
