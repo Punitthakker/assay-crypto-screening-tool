@@ -39,5 +39,18 @@ export async function selfTest(transport: Transport) {
       log("oracle.negative", { addr: ONE, r: (await o.screen(ONE, "ethereum")).facts });
     }
   } catch (e) { log("ofac/oracle", { error: e instanceof Error ? e.message : String(e) }); }
+  // per-RPC probe: which endpoint answers what
+  const { CHAINS } = await import("@cr/shared");
+  const probe = encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [ONE] });
+  const probe2 = encodeFunctionData({ abi: ABI, functionName: "isBlackListed", args: [BINANCE14] });
+  for (const url of CHAINS.ethereum.rpcs) {
+    for (const [n, d] of [["0x1", probe], ["binance14", probe2]] as const) {
+      try {
+        const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: USDT, data: d }, "latest"] }) });
+        const j = (await r.json()) as { result?: string; error?: unknown };
+        log(`rpc ${url} isBlackListed(${n})`, j.result ?? j.error);
+      } catch (e) { log(`rpc ${url}`, { error: e instanceof Error ? e.message : String(e) }); }
+    }
+  }
   log("done", "ok");
 }
