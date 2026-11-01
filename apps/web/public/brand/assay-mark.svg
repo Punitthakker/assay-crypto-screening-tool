@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="64" height="64" role="img" aria-label="Assay mark">
-  <rect x="1" y="1" width="30" height="30" fill="#050709" stroke="#E8EDF2" stroke-width="1.5"/>
-  <path d="M9 25 L16 7 L23 25" stroke="#E8EDF2" stroke-width="2.6" fill="none" stroke-linejoin="miter" stroke-linecap="square"/>
-  <rect x="1" y="17.5" width="30" height="2.6" fill="#C8FF3C"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="80" height="80" role="img" aria-label="assay mark">
+  <path d="M4 2h26l6 6v28H4z" fill="#070A0D" stroke="#4CFF7A" stroke-width="1.5"/>
+  <path d="M30 2v6h6" fill="none" stroke="#4CFF7A" stroke-width="1.5"/>
+  <path d="M25 29v-8.5a6 6 0 0 0-6-6h-3M25 29h-7a5 5 0 0 1 0-10h7" fill="none" stroke="#E8EDF2" stroke-width="3" stroke-linecap="square"/>
+  <rect x="4" y="33" width="32" height="2" fill="#FF2E3F"/>
+  <rect x="8" y="11" width="4" height="4" fill="#4CFF7A"/>
 </svg>

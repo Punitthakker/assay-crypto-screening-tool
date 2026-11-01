@@ -168,15 +168,49 @@ footer .pb b{color:var(--fg2);font-weight:500}
 h2{font-weight:700;letter-spacing:.03em}
 .term .body{white-space:pre-wrap;word-break:break-word}
 #rain{opacity:.42}
+
+.logo{text-transform:none;letter-spacing:.06em;font-weight:700;font-size:22px}
+.logo svg{width:34px;height:34px}
+.logo .us{color:var(--acid);animation:blink 1s steps(1) infinite}
+.hero h1{text-transform:none;letter-spacing:0}
+h2{text-transform:none;letter-spacing:.01em}
+.hero h1 .thin{font-weight:800;color:#FF4656;position:relative;text-shadow:0 0 18px rgba(255,46,63,.55),0 0 46px rgba(255,46,63,.28);animation:glitch 6s infinite}
+@keyframes glitch{0%,88%,100%{text-shadow:0 0 18px rgba(255,46,63,.55),0 0 46px rgba(255,46,63,.28);transform:none}
+ 89%{text-shadow:-3px 0 0 #4CFF7A,3px 0 0 #FF2E3F,0 0 24px rgba(255,46,63,.6);transform:translateX(2px)}
+ 90%{text-shadow:3px 0 0 #4CFF7A,-3px 0 0 #FF2E3F;transform:translateX(-2px)}
+ 91%{text-shadow:0 0 18px rgba(255,46,63,.55);transform:none}
+ 94%{text-shadow:-2px 0 0 #4CFF7A,2px 0 0 #FF2E3F;transform:translateX(1px)}
+ 95%{text-shadow:0 0 18px rgba(255,46,63,.55),0 0 46px rgba(255,46,63,.28);transform:none}}
+.hero{background-image:radial-gradient(ellipse 60% 70% at 72% 45%,rgba(57,217,107,.10),transparent 70%),linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px)}
+#rain{opacity:.5}
+.term{position:relative;border-color:rgba(76,255,122,.35);background:#040705;box-shadow:0 0 0 1px rgba(76,255,122,.08),0 24px 80px -20px rgba(76,255,122,.25),0 0 120px -30px rgba(76,255,122,.35),inset 0 0 60px rgba(57,217,107,.06)}
+.term::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.18) 2px 3px);mix-blend-mode:multiply}
+.term .bar{border-bottom-color:rgba(76,255,122,.2);color:var(--grn2)}
+.term .bar .dot{background:var(--acid);box-shadow:0 0 8px var(--acid)}
+.term .body{color:#B6F5C8}
+.term .body .dim{color:#3F8A57}
+.term .body .g{color:var(--acid);text-shadow:0 0 6px rgba(76,255,122,.6)}
+.term .body .r{text-shadow:0 0 8px rgba(255,46,63,.6)}
+.term .verdict.BLOCK{box-shadow:0 0 18px rgba(255,46,63,.6)}
+.term .verdict.CLEAR{box-shadow:0 0 18px rgba(76,255,122,.6)}
+.term .meter{background:#0D1A12}
+.btn.acid{box-shadow:0 0 24px rgba(76,255,122,.35)}
+@media(prefers-reduced-motion:reduce){.hero h1 .thin{animation:none}.logo .us{animation:none}}
 </style>
 </head>
 <body>
 
 <nav>
   <div class="wrap">
-    <a class="logo" href="#top" aria-label="Assay">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" fill="#050709" stroke="#E8EDF2" stroke-width="1.5"/><path d="M9 25 L16 7 L23 25" stroke="#E8EDF2" stroke-width="2.6" fill="none" stroke-linejoin="miter" stroke-linecap="square"/><rect x="1" y="17.5" width="30" height="2.6" fill="#C8FF3C"/></svg>
-      Assay
+    <a class="logo" href="#top" aria-label="assay">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M4 2h26l6 6v28H4z" fill="#070A0D" stroke="#4CFF7A" stroke-width="1.5"/>
+        <path d="M30 2v6h6" fill="none" stroke="#4CFF7A" stroke-width="1.5"/>
+        <path d="M25 29v-8.5a6 6 0 0 0-6-6h-3M25 29h-7a5 5 0 0 1 0-10h7" fill="none" stroke="#E8EDF2" stroke-width="3" stroke-linecap="square"/>
+        <rect x="4" y="33" width="32" height="2" fill="#FF2E3F"/>
+        <rect x="8" y="11" width="4" height="4" fill="#4CFF7A"/>
+      </svg>
+      assay<span class="us">_</span>
     </a>
     <ul>
       <li><a href="#reads">Reads</a></li>
