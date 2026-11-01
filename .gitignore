@@ -6,3 +6,4 @@ dist
 .impeccable/
 docs/SOURCES.verified.json
 .cache/
+.netlify
