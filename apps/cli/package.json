@@ -1,0 +1,17 @@
+{
+  "name": "@cr/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "screen": "tsx --tsconfig ../../tsconfig.json src/screen.ts",
+    "verify:sources": "tsx --tsconfig ../../tsconfig.json src/verify-sources.ts"
+  },
+  "dependencies": {
+    "@cr/shared": "workspace:*",
+    "@cr/datasources": "workspace:*",
+    "@cr/engine": "workspace:*",
+    "commander": "^12.1.0",
+    "viem": "^2.21.0"
+  }
+}

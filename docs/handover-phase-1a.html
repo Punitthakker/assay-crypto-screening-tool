@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assay - Phase 1a Handover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0A0C11;--panel:#12151D;--panel2:#171B25;--line:#262C3A;--text:#E9ECF3;--dim:#8B93A7;--red:#FF3B4E;--gold:#F2C14E;--green:#3DDC97;--blue:#5AA7FF}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--ink);color:var(--text);font-family:'Archivo',system-ui,sans-serif;font-variation-settings:'wdth' 100;line-height:1.5;padding-bottom:80px}
+  .wrap{max-width:680px;margin:0 auto;padding:0 18px}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  header{padding:44px 0 10px;border-bottom:1px solid var(--line)}
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--red);text-transform:uppercase}
+  h1{font-size:clamp(38px,10vw,64px);font-weight:900;font-variation-settings:'wdth' 72;letter-spacing:-.01em;line-height:.95;margin:10px 0 6px;text-transform:uppercase}
+  h1 .accent{color:var(--red)}
+  .sub{color:var(--dim);font-size:14.5px;max-width:46ch;margin-bottom:18px}
+  .statline{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 22px}
+  .stat{border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+  .stat b{color:var(--text);font-weight:600;display:block;font-size:13px}
+  .flowstrip{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--gold);padding:14px 0 26px}
+  .flowstrip .node{border:1px solid rgba(242,193,78,.4);border-radius:20px;padding:4px 10px;background:rgba(242,193,78,.06)}
+  .flowstrip .arr{color:var(--dim)}
+  .stack{position:relative;padding:26px 0 0 26px;margin-top:6px}
+  .rail{position:absolute;left:7px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold) 0%,var(--gold) 62%,var(--green) 100%);opacity:.85}
+  .layer{position:relative;margin-bottom:26px}
+  .layer::before{content:'';position:absolute;left:-26px;top:26px;width:14px;height:14px;border-radius:50%;background:var(--ink);border:3px solid var(--gold);transform:translateX(1px)}
+  .layer.payout::before{border-color:var(--green)}
+  .lnum{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;color:var(--red);text-transform:uppercase;margin-bottom:6px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 16px 16px}
+  .card h2{font-size:21px;font-weight:800;font-variation-settings:'wdth' 78;text-transform:uppercase;letter-spacing:.01em;margin-bottom:2px}
+  .card .role{color:var(--dim);font-size:13px;margin-bottom:12px}
+  .owners{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{font-family:'IBM Plex Mono',monospace;font-size:10.5px;border:1px solid rgba(255,59,78,.45);color:#FF9AA4;border-radius:20px;padding:3px 10px;background:rgba(255,59,78,.07)}
+  .chip.lead{border-color:var(--red);color:var(--red);font-weight:600}
+  .chip.ok{border-color:rgba(61,220,151,.5);color:var(--green);background:rgba(61,220,151,.06)}
+  .items{display:grid;gap:8px}
+  .item{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:10px 12px;font-size:13.5px}
+  .item b{font-weight:700;display:block;font-size:13.5px;margin-bottom:1px}
+  .item span{color:var(--dim);font-size:12.5px;display:block}
+  .item.risk{border-color:rgba(255,59,78,.4);background:rgba(255,59,78,.05)}
+  .item.risk b{color:#FF9AA4}
+  pre{background:var(--ink);border:1px solid var(--line);border-radius:7px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.6;overflow:auto;color:#CFD6E6;margin-top:10px}
+  pre .c{color:var(--dim)}
+  section.wedge{margin-top:44px}
+  .sec-title{font-size:24px;font-weight:900;font-variation-settings:'wdth' 74;text-transform:uppercase;margin-bottom:4px}
+  .sec-sub{color:var(--dim);font-size:13.5px;margin-bottom:16px}
+  .vs{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .vs .row{display:grid;grid-template-columns:1.1fr 1fr 1fr;border-bottom:1px solid var(--line)}
+  .vs .row:last-child{border-bottom:none}
+  .vs .cell{padding:11px 12px;font-size:12.5px}
+  .vs .head{background:var(--panel);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .vs .head.us{color:var(--red)}
+  .vs .label{color:var(--dim)}
+  .vs .them{color:var(--dim)}
+  .vs .us{color:var(--text);font-weight:600;background:rgba(255,59,78,.04)}
+  section.season{margin-top:44px}
+  .season .card{border-color:rgba(255,59,78,.4)}
+  .steps{display:grid;gap:8px;margin-top:10px}
+  .step{display:flex;gap:12px;align-items:baseline;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:10px 12px}
+  .step .n{font-family:'IBM Plex Mono',monospace;color:var(--red);font-size:11px;min-width:26px}
+  .step p{font-size:13.5px}
+  .step p span{color:var(--dim);font-size:12.5px;display:block}
+  a{color:var(--blue)}
+  footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);letter-spacing:.08em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Internal - Handover / Phase 1a - 1 Nov 2026</div>
+    <h1>Assay<span class="accent">.</span></h1>
+    <p class="sub">Pre-receipt screening for USDT and USDC. What is built, how to run it, what the daily build does next.</p>
+    <div class="statline">
+      <div class="stat"><b>Working name</b>Assay (was Clean Receive)</div>
+      <div class="stat"><b>Phase</b>1a shipped</div>
+      <div class="stat"><b>Tests</b>14 passing, fixtures</div>
+      <div class="stat"><b>Chains</b>8 in registry</div>
+      <div class="stat"><b>Paid keys</b>none needed</div>
+    </div>
+  </header>
+
+  <div class="flowstrip mono">
+    <span class="node">CLI</span><span class="arr">→</span>
+    <span class="node">Telegram bot</span><span class="arr">→</span>
+    <span class="node">Web console</span><span class="arr">→</span>
+    <span class="node">API + SDK</span><span class="arr">→</span>
+    <span class="node" style="border-color:rgba(61,220,151,.5);color:var(--green)">Exchange pilots</span>
+  </div>
+
+  <div class="stack">
+    <div class="rail"></div>
+
+    <div class="layer">
+      <div class="lnum">Layer 01 - What is built</div>
+      <div class="card">
+        <h2>Engine and CLI</h2>
+        <p class="role">One engine, run from a terminal today. Same engine powers the bot, the console and the API later.</p>
+        <div class="owners"><span class="chip ok">shipping</span><span class="chip">packages/engine</span><span class="chip">packages/datasources</span><span class="chip">apps/cli</span></div>
+        <div class="items">
+          <div class="item"><b>Issuer freeze read</b><span>Tether isBlackListed, Circle isBlacklisted, Tron constant call, Solana SPL frozen state. Hard block. Free.</span></div>
+          <div class="item"><b>Sanctions, two sources</b><span>OFAC SDN crypto list (nightly mirror, 1,000+ addresses across tickers) plus the Chainalysis on-chain oracle. Disagreements flagged.</span></div>
+          <div class="item"><b>Asset authenticity</b><span>Fake-token hard block; bridged variants (Binance-Peg, USDC.e, USDbC) named and scored; USDT0 caveat on Arbitrum and Polygon.</span></div>
+          <div class="item"><b>Labels</b><span>Seed set: licensed VASP hot wallets, Tornado Cash routers. Loader ready for the open label databases.</span></div>
+          <div class="item"><b>Travel Rule floor</b><span>Amount at or above AED 3,500 equivalent with no originator floors the verdict at CAUTION and records the gap.</span></div>
+          <div class="item"><b>Scoring v1</b><span>Hard blocks, weighted buckets with caps, five bands, separate confidence, SHA-256 report hash. docs/SCORING.md.</span></div>
+          <div class="item risk"><b>Not yet</b><span>Fund-flow trace and behavioural signals (needs explorer adapters), Watchman name screening, bot, console, API. Confidence is capped at medium until fund-flow lands, on purpose.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="lnum">Layer 02 - How to run it</div>
+      <div class="card">
+        <h2>Ten minutes on your Mac</h2>
+        <p class="role">Node 20 or newer and pnpm. Nothing else. No API keys.</p>
+<pre><span class="c"># 1. unpack and install</span>
+
+npm i -g pnpm && pnpm install
+
+<span class="c"># 2. prove the engine offline (14 tests, recorded fixtures)</span>
+pnpm test
+
+<span class="c"># 3. first live run: verifies every contract, oracle and list, writes docs/SOURCES.verified.json</span>
+pnpm verify:sources
+
+<span class="c"># 4. screen real addresses</span>
+pnpm screen TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t -a USDT
+pnpm screen 0x28C6c06298d514Db089934071355E5743bf21d60 -c ethereum -a USDT
+pnpm screen &lt;addr&gt; -c base -a USDC -m 25000      <span class="c"># amount turns on the Travel Rule check</span>
+pnpm screen &lt;addr&gt; -c base -a USDC --json
+
+<span class="c"># offline demo mode, and recording live responses into fixtures</span>
+CR_TRANSPORT=fixture pnpm screen ...
+CR_RECORD=1 pnpm screen ...</pre>
+        <div class="items" style="margin-top:10px">
+          <div class="item"><b>Exit codes</b><span>0 clear, 3 BLOCK, 1 error, 2 bad input. Pipelines can gate on it directly.</span></div>
+          <div class="item"><b>0x addresses need --chain</b><span>The same address has a different freeze state on each EVM chain. Tron and Solana are inferred from the address format.</span></div>
+          <div class="item risk"><b>verify:sources must pass once before any demo</b><span>The build sandbox has no blockchain access, so every on-chain fixture was hand-encoded. The script probes the USDT0 contracts for their real blacklist method and confirms the oracle with a live positive control.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="lnum">Layer 03 - Brand and design</div>
+      <div class="card">
+        <h2>Assay</h2>
+        <p class="role">The metallurgist's purity test, applied to a stablecoin before it is accepted. Tagline: test the asset before you take it.</p>
+        <div class="owners"><span class="chip ok">assay.money available</span><span class="chip">assay.xyz premium</span><span class="chip">neutral brand, Powered by MoneyBee</span></div>
+        <div class="items">
+          <div class="item"><b>Logo</b><span>Hallmark stamp (rounded hexagon) holding an A whose crossbar runs out as the assay line in amber. Files: apps/web/public/brand/assay-mark.svg and assay-wordmark.svg.</span></div>
+          <div class="item"><b>Design world</b><span>The assay office. Graphite-green base, assay-silver mint for clean, furnace amber to red for risk. Bricolage Grotesque for display and body, JetBrains Mono only for addresses, hashes and code. Recorded in DESIGN.md and PRODUCT.md for impeccable.</span></div>
+          <div class="item"><b>Product page</b><span>apps/web/index.html, built to impeccable's craft floor (no eyebrow labels, no identical card grids, no gradient text, one authored motion moment: the assay line). Shows all nine integration doors, three deployment modes, the UAE regulatory hook and four sample verdicts from real engine output. Published as an artifact for review.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="lnum">Layer 04 - Integration doors</div>
+      <div class="card">
+        <h2>Nine ways in</h2>
+        <p class="role">All from one engine. Status as of today.</p>
+        <div class="items">
+          <div class="item"><b>CLI</b><span>Shipping. Phase 1a.</span></div>
+          <div class="item"><b>Telegram bot</b><span>Phase 1b. /check, /trace, inline mode, three free checks a day. WhatsApp transport later.</span></div>
+          <div class="item"><b>Web console</b><span>Phase 2. Report page, fund-flow graph, evidence table, PDF export, demo mode.</span></div>
+          <div class="item"><b>REST API</b><span>Phase 3. POST /v1/screen, batch, webhooks, keys, OpenAPI.</span></div>
+          <div class="item"><b>TypeScript SDK</b><span>Phase 3. Typed client plus offline mode.</span></div>
+          <div class="item"><b>ReceiveGuard widget</b><span>Phase 3. Drop-in for deposit pages.</span></div>
+          <div class="item"><b>On-chain guard contract</b><span>Phase 3, as an example. Oracle plus issuer blacklist before a treasury accepts.</span></div>
+          <div class="item"><b>Webhooks and nightly re-screen</b><span>Phase 3.</span></div>
+          <div class="item"><b>Vendor adapters</b><span>Phase 4. TRM, Elliptic, Scorechain, Crystal behind the same interface.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer payout">
+      <div class="lnum" style="color:var(--green)">Layer 05 - The daily build</div>
+      <div class="card" style="border-color:rgba(61,220,151,.3)">
+        <h2>Scheduled task</h2>
+        <p class="role">Runs every day at 06:40 Dubai time. Each run clones the repo, picks the next item on the roadmap, builds it with tests, commits, and pushes. You get a short summary each morning.</p>
+        <div class="owners"><span class="chip lead">needs the GitHub repo to exist</span></div>
+        <div class="items">
+          <div class="item"><b>Order of work</b><span>Explorer adapters and 2-hop trace, behavioural signals, Watchman name screening, Telegram bot, web console on the published design, API and SDK, Railway and Netlify deploys, pitch deck and demo script.</span></div>
+          <div class="item"><b>Rules it follows</b><span>Tests on fixtures only in CI, one feature per day, docs updated with every change, scoring_version bumped when weights move, no em dashes, no paid provider enabled by default, never force-push.</span></div>
+          <div class="item risk"><b>It stops and reports instead of guessing</b><span>on anything that changes architecture, weights, commercials, or needs a key or a decision from you.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="wedge">
+    <div class="sec-title">Corrections from verification</div>
+    <p class="sec-sub">Two assumptions in the original brief were wrong. Both are fixed in code and recorded in docs/DECISIONS.md.</p>
+    <div class="vs">
+      <div class="row"><div class="cell head"></div><div class="cell head">Brief assumed</div><div class="cell head us">Verified today</div></div>
+      <div class="row"><div class="cell label">USDT on Arbitrum, Polygon</div><div class="cell them">Tether contract, isBlackListed</div><div class="cell us">USDT0 (LayerZero OFT) since 2025, same address, different blacklist method. Gated behind a live ABI probe.</div></div>
+      <div class="row"><div class="cell label">USDT, USDC on BNB Chain</div><div class="cell them">Issuer contracts with freeze</div><div class="cell us">Binance-Peg copies. No issuer freeze. Reported as bridged, custody risk noted.</div></div>
+      <div class="row"><div class="cell label">Tornado Cash router</div><div class="cell them">OFAC sanctioned, hard block</div><div class="cell us">Delisted by OFAC in March 2025. Kept as a mixer label (CAUTION), not a sanctions block.</div></div>
+      <div class="row"><div class="cell label">Build environment</div><div class="cell them">Can test live</div><div class="cell us">No RPC egress from the sandbox. Everything runs on fixtures until verify:sources runs on your machine.</div></div>
+    </div>
+  </section>
+
+  <section class="season">
+    <div class="sec-title" style="color:var(--red)">What I need from you</div>
+    <p class="sec-sub">Four things, in order. The first one unblocks the daily build.</p>
+    <div class="card">
+      <div class="steps">
+        <div class="step"><span class="n">01</span><p>Create the private GitHub repo <span class="mono">Punitthakker/assay-crypto-screening-tool</span> and tell me<span>I push the Phase 1a commit, add moneybee-risk-datasources as a submodule, and the scheduled task starts committing to it. Until then each daily run stops and reports.</span></p></div>
+        <div class="step"><span class="n">02</span><p>Run pnpm verify:sources once on your Mac and send me docs/SOURCES.verified.json<span>Or add the project folder in the Claude desktop app and I run it through your machine.</span></p></div>
+        <div class="step"><span class="n">03</span><p>Answer the three scoring questions at the bottom of docs/SCORING.md<span>Mixer vs scam weight, dust floor at 8 or 20, Travel Rule floor on by default.</span></p></div>
+        <div class="step"><span class="n">04</span><p>Say yes or no to the name<span>Assay, with assay.money. If no, send two words you like and I rebrand the page and the files in one pass.</span></p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>ASSAY - HANDOVER - PHASE 1A - 1 NOV 2026 - POWERED BY MONEYBEE</footer>
+</div>
+</body>
+</html>

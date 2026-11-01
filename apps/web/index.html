@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assay - test the asset before you take it</title>
+<meta name="description" content="Pre-receipt screening for USDT and USDC. Issuer freeze, sanctions, source of funds and asset authenticity in one verdict, before a deposit is credited.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B1210; --bg2:#0E1613; --raise:#111A17; --raise2:#15211D; --line:#20302B; --line2:#2C4039;
+  --text:#E6EFEA; --dim:#8FA69C; --dim2:#6B8278;
+  --clean:#9FE7C8; --clean-deep:#3FBF8E; --amber:#F2A33A; --hot:#F25C3A; --data:#5FB3D9;
+  --display:'Bricolage Grotesque',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--display);font-optical-sizing:auto;line-height:1.55;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(159,231,200,.28);color:#fff}
+:focus-visible{outline:2px solid var(--clean);outline-offset:3px;border-radius:4px}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px;border:2px solid var(--bg)}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+h1,h2,h3{font-weight:600;letter-spacing:-.025em;text-wrap:balance}
+h2{font-size:clamp(28px,3.6vw,44px);line-height:1.08}
+h3{font-size:19px;letter-spacing:-.015em}
+p.lead{color:var(--dim);font-size:17px;max-width:62ch}
+section{padding:96px 0}
+@media(max-width:720px){section{padding:64px 0}.wrap{padding:0 18px}}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:rgba(11,18,16,.82);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:21px;letter-spacing:-.02em}
+.logo svg{width:30px;height:30px}
+nav ul{display:flex;gap:22px;list-style:none;margin-left:auto;font-size:14.5px;color:var(--dim)}
+@media(max-width:820px){nav ul{display:none}nav .btn{margin-left:auto}}
+nav ul a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);transition:transform .25s cubic-bezier(.2,.8,.2,1),background .2s,border-color .2s;cursor:pointer;font-family:inherit;color:var(--text);background:var(--raise)}
+.btn:hover{transform:translateY(-1px);border-color:var(--clean-deep)}
+.btn.primary{background:var(--clean);color:#07110D;border-color:var(--clean)}
+.btn.primary:hover{background:#B4F0D6}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* hero */
+.hero{position:relative;padding:72px 0 40px;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.9;-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,.25) 0,rgba(0,0,0,.25) 38%,#000 55%);mask-image:linear-gradient(90deg,rgba(0,0,0,.25) 0,rgba(0,0,0,.25) 38%,#000 55%)}
+@media(max-width:900px){.hero canvas{-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 55%,#000 75%);mask-image:linear-gradient(180deg,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 55%,#000 75%)}}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:end;min-height:560px}
+@media(max-width:900px){.hero .wrap{grid-template-columns:1fr;min-height:0}}
+.hero h1{font-size:clamp(44px,6.4vw,88px);line-height:.98;font-weight:650;max-width:14ch}
+.hero h1 em{font-style:normal;color:var(--clean)}
+.hero p.lead{margin:22px 0 30px}
+.check{background:var(--raise);border:1px solid var(--line2);border-radius:12px;padding:16px;box-shadow:0 18px 50px -24px rgba(0,0,0,.7)}
+.check label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:6px}
+.check .row{display:grid;grid-template-columns:1fr 150px;gap:10px;margin-bottom:10px}
+@media(max-width:520px){.check .row{grid-template-columns:1fr}}
+.field{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:11px 12px;color:var(--text);font-family:var(--mono);font-size:13.5px;width:100%;caret-color:var(--clean)}
+.field::placeholder{color:var(--dim2)}
+.field:hover{border-color:var(--line2)}
+select.field{font-family:var(--display);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%238FA69C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.check .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.check small{color:var(--dim2);font-size:12px}
+.samples{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);color:var(--dim);cursor:pointer;background:transparent;transition:border-color .2s,color .2s}
+.chip:hover,.chip[aria-pressed="true"]{border-color:var(--clean-deep);color:var(--text)}
+
+/* verdict */
+.verdict{margin-top:14px;border-radius:12px;border:1px solid var(--line2);background:var(--bg2);overflow:hidden;opacity:0;transform:translateY(8px);transition:opacity .5s cubic-bezier(.2,.8,.2,1),transform .5s cubic-bezier(.2,.8,.2,1)}
+.verdict.show{opacity:1;transform:none}
+.verdict .top{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.verdict .band{font-weight:700;font-size:15px;letter-spacing:.02em;padding:6px 12px;border-radius:6px}
+.band.BLOCK{background:rgba(242,92,58,.16);color:#FFB09E}.band.CAUTION{background:rgba(242,163,58,.16);color:#FFD59A}.band.CLEAR,.band.LOW{background:rgba(159,231,200,.14);color:var(--clean)}.band.HIGH{background:rgba(242,122,58,.18);color:#FFC2A6}
+.verdict .score{font-family:var(--mono);font-size:13px;color:var(--dim)}
+.verdict .score b{color:var(--text);font-weight:600}
+.verdict .ev{padding:8px 16px 14px;display:grid;gap:7px;font-size:13.5px}
+.verdict .ev div{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:baseline}
+.verdict .ev .t{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+.verdict .ev .t.block{color:#FFB09E}.verdict .ev .t.risk{color:#FFD59A}
+.verdict .cov{padding:10px 16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--dim2);line-height:1.8}
+
+/* reads */
+.reads{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start}
+@media(max-width:900px){.reads{grid-template-columns:1fr;gap:28px}}
+.reads .sticky{position:sticky;top:92px}
+.ledger{border-top:1px solid var(--line)}
+.ledger .r{display:grid;grid-template-columns:36px 1fr;gap:18px;padding:22px 0;border-bottom:1px solid var(--line);align-items:start}
+.ledger .r svg{width:24px;height:24px;stroke:var(--clean);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-top:2px}
+.ledger .r.hot svg{stroke:var(--amber)}
+.ledger h3{margin-bottom:4px}
+.ledger p{color:var(--dim);font-size:14.5px;max-width:60ch}
+.ledger .src{font-family:var(--mono);font-size:11.5px;color:var(--dim2);margin-top:8px}
+
+/* integrations */
+.integ{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.integ-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:44px}
+.tile{grid-column:span 4;background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px;min-height:200px;transition:border-color .25s}
+.tile:hover{border-color:var(--line2)}
+.tile.wide{grid-column:span 8}.tile.tall{grid-row:span 2}.tile.half{grid-column:span 6}
+@media(max-width:900px){.tile,.tile.wide,.tile.half{grid-column:span 12}.tile.tall{grid-row:auto}}
+.tile .who{font-size:12.5px;color:var(--dim2)}
+.tile h3{display:flex;align-items:center;gap:10px}
+.tile h3 svg{width:22px;height:22px;stroke:var(--clean);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tile p{color:var(--dim);font-size:14px}
+.tile .status{margin-top:auto;font-family:var(--mono);font-size:11px;color:var(--dim2)}
+.tile .status b{font-weight:500;color:var(--clean)}
+.tile .status b.soon{color:var(--amber)}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.6;overflow:auto;color:#CFE0D8}
+pre .k{color:var(--clean)}pre .s{color:#FFD59A}pre .c{color:var(--dim2)}
+.chat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;font-size:13px}
+.chat .m{padding:9px 12px;border-radius:10px;max-width:92%;line-height:1.45}
+.chat .u{background:var(--raise2);justify-self:end;border-bottom-right-radius:3px;font-family:var(--mono);font-size:12px}
+.chat .b{background:#0F1A16;border:1px solid var(--line);border-bottom-left-radius:3px}
+.chat .b b{font-weight:600}
+
+/* deploy */
+.deploy{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:40px}
+@media(max-width:800px){.deploy{grid-template-columns:1fr}}
+.deploy>div{padding:26px;border-right:1px solid var(--line)}
+.deploy>div:last-child{border-right:none}
+@media(max-width:800px){.deploy>div{border-right:none;border-bottom:1px solid var(--line)}.deploy>div:last-child{border-bottom:none}}
+.deploy h3{margin-bottom:8px}
+.deploy p{color:var(--dim);font-size:14px}
+.deploy .for{font-size:12.5px;color:var(--dim2);margin-top:14px}
+
+/* reg */
+.reg{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+@media(max-width:800px){.reg{grid-template-columns:1fr}}
+.reg ul{list-style:none;display:grid;gap:12px;margin-top:20px}
+.reg li{display:grid;grid-template-columns:20px 1fr;gap:12px;font-size:15px;color:var(--dim)}
+.reg li svg{width:20px;height:20px;stroke:var(--clean);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-top:3px}
+.reg li b{color:var(--text);font-weight:600}
+.quote{border:1px solid var(--line);border-radius:12px;padding:28px;background:var(--raise)}
+.quote p{font-size:20px;line-height:1.35;letter-spacing:-.01em}
+.quote small{display:block;margin-top:14px;color:var(--dim2);font-size:13px}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:40px 0 48px;color:var(--dim2);font-size:13px}
+footer .wrap{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media(max-width:700px){footer .wrap{grid-template-columns:1fr}}
+footer .disc{max-width:60ch;line-height:1.5}
+footer .pb{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+@media(max-width:700px){footer .pb{justify-content:flex-start}}
+footer .pb b{color:var(--dim);font-weight:600}
+@media(prefers-reduced-motion:reduce){.verdict,.btn{transition:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Assay home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><defs><clipPath id="hx"><path d="M32 3 L55.4 16.5 V47.5 L32 61 L8.6 47.5 V16.5 Z"/></clipPath></defs><path d="M32 3 L55.4 16.5 V47.5 L32 61 L8.6 47.5 V16.5 Z" fill="#111A17" stroke="#9FE7C8" stroke-width="2.5" stroke-linejoin="round"/><g clip-path="url(#hx)"><path d="M32 15 L20 46 M32 15 L44 46" stroke="#E6EFEA" stroke-width="4.2" stroke-linecap="round" fill="none"/><rect x="0" y="34" width="64" height="3" fill="#F2A33A"/></g></svg>
+      assay
+    </a>
+    <ul>
+      <li><a href="#reads">What it reads</a></li>
+      <li><a href="#integrations">Integrations</a></li>
+      <li><a href="#deploy">Deploy</a></li>
+      <li><a href="#regulation">Why now</a></li>
+    </ul>
+    <a class="btn" href="https://t.me/" rel="noopener">Open the bot</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <canvas id="assayline" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div>
+      <h1>Test the asset <em>before</em> you take it.</h1>
+      <p class="lead">Assay screens a USDT or USDC transfer before it is credited: issuer freeze, sanctions, where the funds came from, and whether the token is even real. One verdict, every reason shown, hashed for your audit file.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn primary" href="#integrations">See the integrations</a>
+        <a class="btn" href="#reads">What a check reads</a>
+      </div>
+    </div>
+    <div>
+      <form class="check" id="checkform" autocomplete="off">
+        <label for="addr">Sender address</label>
+        <div class="row">
+          <input class="field" id="addr" placeholder="0x… or T… or Solana address" spellcheck="false">
+          <select class="field" id="chain" aria-label="Chain">
+            <option value="ethereum">Ethereum</option><option value="tron">Tron</option><option value="solana">Solana</option><option value="base">Base</option><option value="arbitrum">Arbitrum</option><option value="polygon">Polygon</option><option value="avalanche">Avalanche</option><option value="bnb">BNB Chain</option>
+          </select>
+        </div>
+        <div class="row">
+          <select class="field" id="asset" aria-label="Asset"><option>USDT</option><option>USDC</option></select>
+          <input class="field" id="amt" placeholder="amount" inputmode="decimal">
+        </div>
+        <div class="foot">
+          <button class="btn primary" type="submit" id="go">Assay it</button>
+          <small>Live checks need a running API. Sample results below are real engine output on recorded data.</small>
+        </div>
+        <div class="samples" role="group" aria-label="Sample addresses">
+          <button type="button" class="chip" data-s="hot">Binance hot wallet</button>
+          <button type="button" class="chip" data-s="ofac">OFAC listed</button>
+          <button type="button" class="chip" data-s="frozen">Tether frozen, Tron</button>
+          <button type="button" class="chip" data-s="travel">25k, no originator</button>
+        </div>
+      </form>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section id="reads">
+  <div class="wrap reads">
+    <div class="sticky">
+      <h2>Six reads, one verdict</h2>
+      <p class="lead" style="margin-top:14px">Every point of risk carries its source, the on-chain reference and the time of the check. Hard blocks override arithmetic. Confidence is reported separately, so a partial check never looks like a full one.</p>
+      <p class="lead" style="margin-top:14px;font-size:14px">Score 0 to 100. CLEAR, LOW, CAUTION, HIGH, BLOCK. Scoring version pinned in every report.</p>
+    </div>
+    <div class="ledger">
+      <div class="r hot">
+        <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <div><h3>Issuer freeze</h3><p>Reads Tether's and Circle's own blacklist on the exact contract for the chain the funds move on. Frozen means BLOCK, whatever else is true.</p><div class="src">isBlackListed · isBlacklisted · SPL frozen state · Tron constant call</div></div>
+      </div>
+      <div class="r hot">
+        <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+        <div><h3>Sanctions, two sources</h3><p>OFAC's digital-currency list, refreshed nightly, and the Chainalysis on-chain oracle. A disagreement is flagged, never silently resolved.</p><div class="src">OFAC SDN · Chainalysis oracle · UN and UAE lists via the identity layer</div></div>
+      </div>
+      <div class="r">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 11l10-4M7 13l10 4"/></svg>
+        <div><h3>Source of funds</h3><p>Traces inbound transfers two hops back, value-weighted and hop-decayed, against mixers, scams, frozen and sanctioned counterparties. Licensed exchange wallets end the trace, and the report says so.</p><div class="src">Etherscan V2 · TronGrid · Helius · open label sets</div></div>
+      </div>
+      <div class="r">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+        <div><h3>Behaviour</h3><p>Wallet age, pass-through speed, structuring just under thresholds, counterparty concentration, approvals to known drainers.</p><div class="src">explorer history · threshold table per jurisdiction</div></div>
+      </div>
+      <div class="r">
+        <svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+        <div><h3>Asset authenticity</h3><p>Is this the issuer's contract or a look-alike? Native, bridged or Binance-pegged? Fake USDT is the most common retail loss and it is a hard block here.</p><div class="src">registry of issuer contracts per chain · bridged variants named</div></div>
+      </div>
+      <div class="r">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <div><h3>Identity</h3><p>Shown as unverified, attested or verified, never implied. Travel Rule data over AED 3,500 missing? The verdict floors at CAUTION and the report says why.</p><div class="src">IVMS101 originator · Watchman name screening · GLEIF for corporates</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="integ" id="integrations">
+  <div class="wrap">
+    <h2>Every way in</h2>
+    <p class="lead" style="margin-top:14px">One engine, nine doors. Pick the one that matches who is asking: a trader on their phone, a compliance analyst, or a deposit pipeline that needs a yes or no in under a second.</p>
+    <div class="integ-grid">
+
+      <div class="tile tall">
+        <div class="who">For anyone</div>
+        <h3><svg viewBox="0 0 24 24"><path d="M21 4L3 11l7 2 2 7z"/></svg>Telegram bot</h3>
+        <p>Paste an address, get a verdict in seconds. Three free checks a day, no sign-up. Inline mode works inside any group chat.</p>
+        <div class="chat" aria-label="Sample bot conversation">
+          <div class="m u">/check TXYZopYR…VkAeBf USDT</div>
+          <div class="m b"><b>🔴 BLOCK</b> · risk 100 · confidence medium<br>Frozen by Tether for USDT on Tron. Anything it sends will fail.<br><span style="color:var(--dim2)">Full report → assay.money/r/8f2c</span></div>
+          <div class="m u">/check 0x28C6…1d60 ethereum USDT</div>
+          <div class="m b"><b>🟢 CLEAR</b> · risk 0 · confidence medium<br>Binance hot wallet (licensed VASP, AE). Not frozen, not sanctioned.</div>
+        </div>
+        <div class="status"><b>phase 1b</b> · WhatsApp transport follows</div>
+      </div>
+
+      <div class="tile wide">
+        <div class="who">For deposit pipelines</div>
+        <h3><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>REST API</h3>
+        <p>Call it pre-credit. Every response carries the evidence, the coverage per source and a SHA-256 hash you can store as audit proof.</p>
+<pre><span class="c"># before crediting the deposit</span>
+<span class="k">POST</span> /v1/screen
+{ "address": "<span class="s">TXYZ…AeBf</span>", "chain": "<span class="s">tron</span>", "asset": "<span class="s">USDT</span>", "amount": 25000 }
+
+<span class="c"># → { verdict: "BLOCK", score: 100, hardBlock: "HB_FROZEN", reportHash: "4f0f…", … }</span></pre>
+        <div class="status"><b class="soon">phase 3</b> · keys, rate limits, OpenAPI</div>
+      </div>
+
+      <div class="tile half">
+        <div class="who">For engineers</div>
+        <h3><svg viewBox="0 0 24 24"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg>TypeScript SDK</h3>
+        <p>Typed client plus an offline mode that runs the engine and the free adapters locally, so a wallet or a custody backend can screen without calling home.</p>
+<pre>const r = await assay.screen({ address, chain: <span class="s">"base"</span>, asset: <span class="s">"USDC"</span> });
+if (r.verdict === <span class="s">"BLOCK"</span>) reject(r.hardBlock);</pre>
+        <div class="status"><b class="soon">phase 3</b> · npm, React hook</div>
+      </div>
+
+      <div class="tile half">
+        <div class="who">For product teams</div>
+        <h3><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>ReceiveGuard widget</h3>
+        <p>A drop-in component for a deposit page. The user sees the verdict before they send; your support queue sees fewer frozen-funds tickets.</p>
+<pre>&lt;ReceiveGuard chain=<span class="s">"tron"</span> asset=<span class="s">"USDT"</span> onBlock={showWarning} /&gt;</pre>
+        <div class="status"><b class="soon">phase 3</b></div>
+      </div>
+
+      <div class="tile">
+        <div class="who">For compliance analysts</div>
+        <h3><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h4l2-4 2 8 2-4h0"/></svg>Web console</h3>
+        <p>Deep report, fund-flow graph, evidence table with explorer links, PDF export and re-check. Built to live in all day.</p>
+        <div class="status"><b class="soon">phase 2</b></div>
+      </div>
+
+      <div class="tile">
+        <div class="who">For treasuries and protocols</div>
+        <h3><svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>On-chain guard</h3>
+        <p>A small Solidity contract that asks the Chainalysis oracle and the issuer blacklist before a treasury accepts. No API in the loop.</p>
+<pre>require(!oracle.isSanctioned(from));
+require(!usdt.isBlackListed(from));</pre>
+        <div class="status"><b class="soon">example in phase 3</b></div>
+      </div>
+
+      <div class="tile">
+        <div class="who">For operators</div>
+        <h3><svg viewBox="0 0 24 24"><path d="M3 17l9 4 9-4M3 12l9 4 9-4M3 7l9 4 9-4-9-4z"/></svg>Webhooks and monitoring</h3>
+        <p>Re-screen stored addresses nightly. Get told the moment a counterparty is frozen or listed, not when the next deposit fails.</p>
+        <div class="status"><b class="soon">phase 3</b></div>
+      </div>
+
+      <div class="tile wide">
+        <div class="who">For engineers, right now</div>
+        <h3><svg viewBox="0 0 24 24"><path d="M4 17l6-5-6-5M12 19h8"/></svg>CLI</h3>
+        <p>The same engine, in a terminal. Exit code 3 on BLOCK so it slots into any script. Runs with no API keys against public RPCs, or fully offline on recorded fixtures.</p>
+<pre>$ pnpm screen 0x28C6…1d60 -c ethereum -a USDT
+🟢 CLEAR  risk 0/100  confidence medium
+  info   Not frozen by Tether for USDT on ethereum at time of check.
+  info   Sender is labelled "Binance 14 (hot wallet)" (exchange_licensed, AE, VARA VASP licence)
+coverage: issuer-freeze=ok  ofac-sdn=ok (0h)  chainalysis-oracle=ok  labels=ok  fund-flow=disabled</pre>
+        <div class="status"><b>shipping</b> · phase 1a</div>
+      </div>
+
+      <div class="tile">
+        <div class="who">For your existing vendor</div>
+        <h3><svg viewBox="0 0 24 24"><path d="M9 7H6a3 3 0 0 0 0 6h3M15 7h3a3 3 0 0 1 0 6h-3M8 10h8"/></svg>Vendor adapters</h3>
+        <p>Already paying TRM, Elliptic or Scorechain? Plug it in as one more source. Assay stays the explainable gate in front.</p>
+        <div class="status"><b class="soon">phase 4</b> · adapter interface shipping now</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="deploy">
+  <div class="wrap">
+    <h2>Three ways to run it</h2>
+    <div class="deploy">
+      <div><h3>Hosted</h3><p>Our API and console. Fastest start, per-check or monthly.</p><div class="for">OTC desks, PSPs, smaller VASPs</div></div>
+      <div><h3>Self-hosted</h3><p>Docker inside your VPC. Addresses never leave your perimeter. Same engine, same lists, your keys.</p><div class="for">Exchanges and custodians with data residency rules</div></div>
+      <div><h3>Embedded</h3><p>SDK offline mode or the on-chain guard. No network dependency on us at decision time.</p><div class="for">Wallets, treasuries, protocols</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="regulation" style="border-top:1px solid var(--line)">
+  <div class="wrap reg">
+    <div>
+      <h2>Built for the UAE rulebook, useful everywhere</h2>
+      <ul>
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg><span><b>Travel Rule, AED 3,500.</b> Fully implemented by VARA in Feb 2026. Assay floors the verdict when originator data is missing and records the gap.</span></li>
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg><span><b>Sanctions screening</b> against OFAC, UN and the UAE local list is a licensing expectation, with evidence on file.</span></li>
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg><span><b>Enhanced due diligence</b> on self-hosted wallets. The identity layer makes unverified senders explicit instead of invisible.</span></li>
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg><span><b>Audit trail.</b> Every report is hashed and timestamped, so a decision can be reproduced for an inspector.</span></li>
+      </ul>
+    </div>
+    <div class="quote">
+      <p>Frozen stablecoin inside an omnibus wallet is a direct loss and a conversation with the regulator. Assay is the gate in front of the credit.</p>
+      <small>Why exchanges run it pre-credit, not post-incident.</small>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="disc">Assay is a screening support tool. It is not legal advice and not a substitute for a regulated entity's own AML/CFT programme or a licensed blockchain analytics provider. Results reflect public data at the time of each check. Sample results on this page come from recorded data and are labelled as such.</div>
+    <div class="pb">Powered by <b>MoneyBee</b></div>
+  </div>
+</footer>
+
+<script>
+/* ---- sample verdicts (real engine output on recorded fixtures) ---- */
+const SAMPLES = {
+  hot:{addr:"0x28C6c06298d514Db089934071355E5743bf21d60",chain:"ethereum",asset:"USDT",amt:"",verdict:"CLEAR",score:0,conf:"medium",ev:[["info","Not frozen by Tether for USDT on Ethereum at time of check."],["info","Sender is labelled Binance 14 (hot wallet), licensed VASP, AE."]],cov:"issuer-freeze=ok · ofac-sdn=ok · chainalysis-oracle=ok · labels=ok · fund-flow=disabled"},
+  ofac:{addr:"0x0330070FD38Ec3bB94F58FA55D40368271E9e54A",chain:"ethereum",asset:"USDT",amt:"",verdict:"BLOCK",score:100,conf:"medium",ev:[["block","Sender address appears on the OFAC SDN digital currency address list."],["block","Chainalysis sanctions oracle reports this address as sanctioned."],["info","Not frozen by Tether for USDT on Ethereum at time of check."]],cov:"issuer-freeze=ok · ofac-sdn=ok · chainalysis-oracle=ok · labels=ok · fund-flow=disabled"},
+  frozen:{addr:"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf",chain:"tron",asset:"USDT",amt:"",verdict:"BLOCK",score:100,conf:"medium",ev:[["block","Address is currently frozen by Tether for USDT on Tron. Any USDT it sends or receives on this chain will fail."]],cov:"issuer-freeze=ok · ofac-sdn=ok · chainalysis-oracle=not_applicable · labels=ok · fund-flow=disabled"},
+  travel:{addr:"0x1111111111111111111111111111111111111111",chain:"base",asset:"USDC",amt:"25000",verdict:"CAUTION",score:0,conf:"medium",ev:[["info","Not frozen by Circle for USDC on Base at time of check."],["info","Amount 25,000 USDC is at or above the Travel Rule threshold and no originator data was supplied. Verdict floored at CAUTION."]],cov:"issuer-freeze=ok · ofac-sdn=ok · chainalysis-oracle=ok · labels=ok · fund-flow=disabled · flag TRAVEL_RULE_DATA_REQUIRED"}
+};
+const $=s=>document.querySelector(s);
+const vbox=$("#verdict");
+function render(s,label){
+  vbox.innerHTML=`<div class="top"><span class="band ${s.verdict}">${s.verdict}</span><span class="score">risk <b>${s.score}</b>/100 · confidence <b>${s.conf}</b> · <span style="color:var(--dim2)">sample · recorded data</span></span></div>
+  <div class="ev">${s.ev.map(([t,m])=>`<div><span class="t ${t}">${t==="block"?"BLOCK":t==="risk"?"+risk":"info"}</span><span>${m}</span></div>`).join("")}</div>
+  <div class="cov">${s.cov}</div>`;
+  vbox.classList.remove("show");requestAnimationFrame(()=>requestAnimationFrame(()=>vbox.classList.add("show")));
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.s===label?"true":"false"));
+}
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{const s=SAMPLES[c.dataset.s];$("#addr").value=s.addr;$("#chain").value=s.chain;$("#asset").value=s.asset;$("#amt").value=s.amt;render(s,c.dataset.s);}));
+$("#checkform").addEventListener("submit",e=>{e.preventDefault();const a=$("#addr").value.trim();const hit=Object.entries(SAMPLES).find(([,s])=>s.addr.toLowerCase()===a.toLowerCase());
+  if(hit){render(hit[1],hit[0]);return;}
+  vbox.innerHTML=`<div class="top"><span class="band LOW" style="background:var(--raise2);color:var(--dim)">NO LIVE API</span><span class="score">This page has no backend attached yet. Try a sample, or run the CLI.</span></div>`;vbox.classList.add("show");});
+
+/* ---- the assay line: one authored motion moment ---- */
+(function(){
+  const c=$("#assayline");const ctx=c.getContext("2d");let W,H,dpr,parts=[],t0=performance.now();
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function size(){dpr=Math.min(devicePixelRatio||1,2);W=c.clientWidth;H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
+  size();addEventListener("resize",size);
+  const LANES=7;
+  function spawn(i){const lane=Math.floor(Math.random()*LANES);return{x:-20-Math.random()*300,lane,y:0,v:38+Math.random()*34,r:1.6+Math.random()*1.8,hot:Math.random()<0.18,stamped:false,st:0,id:i};}
+  for(let i=0;i<46;i++){const p=spawn(i);p.x=Math.random()*W;parts.push(p);}
+  function laneY(l){return H*0.18+l*(H*0.62/(LANES-1));}
+  function draw(now){
+    const dt=Math.min(0.05,(now-t0)/1000);t0=now;
+    ctx.clearRect(0,0,W,H);
+    const lineX=W*0.56;
+    // lanes
+    ctx.strokeStyle="rgba(32,48,43,.9)";ctx.lineWidth=1;
+    for(let l=0;l<LANES;l++){const y=laneY(l);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    // the assay line
+    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"rgba(242,163,58,0)");g.addColorStop(.5,"rgba(242,163,58,.9)");g.addColorStop(1,"rgba(242,163,58,0)");
+    ctx.strokeStyle=g;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(lineX,0);ctx.lineTo(lineX,H);ctx.stroke();
+    // receiving mark
+    ctx.strokeStyle="rgba(159,231,200,.55)";ctx.lineWidth=1.5;const hx=W*0.86,hy=H*0.49,R=26;ctx.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k-Math.PI/2;const px=hx+R*Math.cos(a),py=hy+R*Math.sin(a);k?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.stroke();
+    for(const p of parts){
+      if(!reduce)p.x+=p.v*dt;
+      p.y=laneY(p.lane);
+      if(!p.stamped&&p.x>=lineX){p.stamped=true;p.st=now;}
+      if(p.x>W+30)Object.assign(p,spawn(p.id));
+      let col="rgba(143,166,156,.55)";
+      if(p.stamped){const k=Math.min(1,(now-p.st)/420);const e=1-Math.pow(1-k,3);col=p.hot?`rgba(242,92,58,${.45+.5*e})`:`rgba(159,231,200,${.45+.5*e})`;
+        if(k<1){ctx.beginPath();ctx.arc(p.x,p.y,p.r+10*(1-e),0,Math.PI*2);ctx.strokeStyle=p.hot?`rgba(242,92,58,${.5*(1-k)})`:`rgba(159,231,200,${.5*(1-k)})`;ctx.lineWidth=1;ctx.stroke();}
+        if(p.hot&&p.x>lineX+6){p.v=Math.max(0,p.v-160*dt);} // hot ones stop at the line
+      }
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    }
+    if(!reduce)requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

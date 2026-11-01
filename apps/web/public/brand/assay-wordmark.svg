@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" width="260" height="64" role="img" aria-label="assay">
+  <defs><clipPath id="hex2"><path d="M32 3 L55.4 16.5 V47.5 L32 61 L8.6 47.5 V16.5 Z"/></clipPath></defs>
+  <path d="M32 3 L55.4 16.5 V47.5 L32 61 L8.6 47.5 V16.5 Z" fill="#111A17" stroke="#9FE7C8" stroke-width="2.5" stroke-linejoin="round"/>
+  <g clip-path="url(#hex2)">
+    <path d="M32 15 L20 46 M32 15 L44 46" stroke="#E6EFEA" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <rect x="0" y="34" width="64" height="3" fill="#F2A33A"/>
+  </g>
+  <text x="76" y="44" font-family="Bricolage Grotesque, Archivo, system-ui, sans-serif" font-weight="600" font-size="38" letter-spacing="-0.02em" fill="#E6EFEA">assay</text>
+</svg>
