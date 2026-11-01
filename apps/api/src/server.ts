@@ -10,6 +10,7 @@ import path from "node:path";
 import { Engine } from "@cr/engine";
 import { LabelStore, transportFromEnv } from "@cr/datasources";
 import { CHAINS, ENABLED_CHAINS, TOKENS, DISCLAIMER } from "@cr/shared";
+import { selfTest } from "./selftest.js";
 
 const root = path.resolve(import.meta.dirname, "../../..");
 process.chdir(root);
@@ -73,4 +74,4 @@ const server = createServer(async (req, res) => {
   return send(res, 404, { error: "not found" });
 });
 
-server.listen(PORT, () => console.log(`assay-api listening on :${PORT} transport=${transport.mode}`));
+server.listen(PORT, () => { console.log(`assay-api listening on :${PORT} transport=${transport.mode}`); if (process.env.ASSAY_SELFTEST !== "0") selfTest(transport).catch((e) => console.error("[selftest] failed", e)); });
