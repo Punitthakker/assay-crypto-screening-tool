@@ -6,18 +6,22 @@
 <title>ASSAY // test the asset before you take it</title>
 <meta name="description" content="Pre-receipt screening for USDT and USDC. Issuer freeze, sanctions, source of funds and asset authenticity in one verdict, before a deposit is credited.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#050709; --bg2:#080B0E; --panel:#0B0F13; --line:#161C22; --line2:#232C35; --grid:rgba(255,255,255,.035);
   --fg:#E8EDF2; --fg2:#8B98A6; --fg3:#56636F;
-  --acid:#C8FF3C; --acid-dim:rgba(200,255,60,.14); --red:#FF2E3F; --red-dim:rgba(255,46,63,.14); --amber:#FFB020; --amber-dim:rgba(255,176,32,.14);
+  --acid:#4CFF7A; --acid-dim:rgba(76,255,122,.14); --grn:#39D96B; --grn2:#1F7A3C; --orb:'Orbitron',system-ui,sans-serif; --red:#FF2E3F; --red-dim:rgba(255,46,63,.14); --amber:#FFB020; --amber-dim:rgba(255,176,32,.14);
   --disp:'Chakra Petch',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 ::selection{background:var(--acid);color:#050709}
+.hero h1,.logo,.readout .v,h2{font-family:var(--orb)}
+.hero h1{font-weight:800;letter-spacing:.01em}
+h2{font-weight:700;letter-spacing:.03em}
+.btn{font-family:var(--orb);font-weight:600;font-size:12px}
 :focus-visible{outline:1px solid var(--acid);outline-offset:3px}
 ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--line2)}
 a{color:inherit;text-decoration:none}
@@ -46,10 +50,22 @@ nav ul a:hover{color:var(--fg)}
 .btn{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 18px;font-family:var(--disp);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line2);color:var(--fg);background:transparent;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
 .btn:hover{border-color:var(--fg2)}
 .btn.acid{background:var(--acid);color:#050709;border-color:var(--acid)}
-.btn.acid:hover{background:#D9FF6E;border-color:#D9FF6E}
+.btn.acid:hover{background:#7CFF9E;border-color:#7CFF9E}
 nav .btn{margin-left:auto}@media(min-width:821px){nav .btn{margin-left:0}}
 
 /* hero */
+.ticker{border-bottom:1px solid var(--line);background:#030405;height:30px;overflow:hidden;font-size:11px;letter-spacing:.08em;color:var(--fg3);white-space:nowrap}
+.ticker .track{display:inline-flex;gap:48px;align-items:center;height:30px;padding-left:32px;will-change:transform;animation:tick 60s linear infinite}
+.ticker .track span b{font-weight:500}
+.ticker .ok{color:var(--grn)}.ticker .bad{color:var(--red)}.ticker .warn{color:var(--amber)}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+#rain{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.55;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.6) 60%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.6) 60%,transparent 100%)}
+.hero .wrap{position:relative}
+.cursor{display:inline-block;width:8px;height:14px;background:var(--acid);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.term .body{min-height:470px}
+.term .body .g{color:var(--grn)}.term .body .dim{color:var(--fg3)}
+@media(prefers-reduced-motion:reduce){.ticker .track{animation:none}.cursor{animation:none}#rain{display:none}}
 .hero{position:relative;border-bottom:1px solid var(--line);padding:96px 0 72px;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:64px 64px;background-position:center top}
 .hero .wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
 @media(max-width:960px){.hero .wrap{grid-template-columns:1fr;gap:40px}}
@@ -146,6 +162,12 @@ footer .wrap{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:st
 footer .disc{max-width:70ch}
 footer .pb{letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
 footer .pb b{color:var(--fg2);font-weight:500}
+.hero h1,.logo,.readout .v,h2,.btn{font-family:var(--orb)}
+.hero h1{font-weight:800;letter-spacing:.01em;font-size:clamp(38px,5vw,74px)}
+.hero h1 .thin{font-weight:400}
+h2{font-weight:700;letter-spacing:.03em}
+.term .body{white-space:pre-wrap;word-break:break-word}
+#rain{opacity:.42}
 </style>
 </head>
 <body>
@@ -166,45 +188,27 @@ footer .pb b{color:var(--fg2);font-weight:500}
   </div>
 </nav>
 
+<div class="ticker" aria-hidden="true"><div class="track" id="ticker"></div></div>
 <header class="hero" id="top">
+  <canvas id="rain" aria-hidden="true"></canvas>
   <div class="wrap">
     <div>
-      <h1><span class="thin">Test the asset</span><span>before you</span><span>take it.</span></h1>
+      <h1><span class="thin" data-scramble>Test the asset</span><span data-scramble>before you</span><span data-scramble>take it.</span></h1>
       <p class="sub">Assay screens a USDT or USDC transfer <b>before it is credited</b>: issuer freeze, sanctions, where the funds came from, and whether the token is even real. One verdict. Every reason shown. Hashed for the audit file.</p>
       <div class="cta">
         <a class="btn acid" href="#integrations">Integrations</a>
         <a class="btn" href="#reads">What a check reads</a>
       </div>
       <div class="readout">
-        <div><div class="tag">Chains</div><div class="v">08</div></div>
-        <div><div class="tag">Hard blocks</div><div class="v">04</div></div>
-        <div><div class="tag">Paid keys required</div><div class="v">00</div></div>
+        <div><div class="tag">Chains</div><div class="v" data-count="8">00</div></div>
+        <div><div class="tag">Hard blocks</div><div class="v" data-count="4">00</div></div>
+        <div><div class="tag">Paid keys required</div><div class="v" data-count="0">00</div></div>
       </div>
     </div>
 
-    <div class="term" aria-label="Sample report, recorded data">
-      <div class="bar"><span class="dot"></span>assay // screen // sample on recorded data</div>
-<div class="body"><span class="d">$</span> assay screen <span class="k">TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf</span> --asset USDT
-
-<span class="verdict BLOCK">BLOCK</span>  risk <span class="meter"><i style="width:100%;background:var(--red)"></i></span>100/100  confidence medium
-asset    USDT  <span class="d">Tether, native</span>  TR7NHqje…gjLj6t
-chain    TRON
-hard     <span class="r">HB_FROZEN</span>
-
-<span class="r">BLOCK</span>   Frozen by Tether for USDT on Tron.
-        Anything it sends or receives on this chain will fail.
-<span class="d">info    OFAC SDN: no match (snapshot 0h)</span>
-<span class="d">info    Chainalysis oracle: not applicable on Tron</span>
-
-coverage issuer-freeze=<span class="k">ok</span> ofac-sdn=<span class="k">ok</span> labels=<span class="k">ok</span> fund-flow=<span class="a">disabled</span>
-sha256   4f0f58f7b5e42008…   2026-11-01T03:30:28Z
-
-<span class="d">$</span> assay screen <span class="k">0x28C6c06298d514Db089934071355E5743bf21d60</span> --chain ethereum --asset USDT
-
-<span class="verdict CLEAR">CLEAR</span>  risk <span class="meter"><i style="width:0%"></i></span>000/100  confidence medium
-<span class="d">info    Not frozen by Tether for USDT on Ethereum.</span>
-<span class="d">info    Labelled Binance 14 hot wallet. Licensed VASP, AE.</span>
-flag     SENDER_IS_LICENSED_VASP</div>
+    <div class="term" aria-label="Live sample terminal, recorded data">
+      <div class="bar"><span class="dot"></span>assay // screen // live replay of recorded sessions</div>
+      <div class="body" id="term"></div>
     </div>
   </div>
 </header>
@@ -367,5 +371,88 @@ require(!usdt.isBlackListed(from));</pre>
     <div class="pb">Powered by <b>MoneyBee</b></div>
   </div>
 </footer>
+
+<script>
+(function(){
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const HEX="0123456789ABCDEF";
+/* ---- headline decode ---- */
+document.querySelectorAll("[data-scramble]").forEach((el,i)=>{
+  const final=el.textContent;el.textContent="";
+  if(reduce){el.textContent=final;return;}
+  let frame=0;const total=28+i*10;
+  const tick=()=>{frame++;let out="";
+    for(let k=0;k<final.length;k++){const ch=final[k];if(ch===" "){out+=" ";continue;}
+      const settleAt=(k/final.length)*total*0.7+i*8;
+      out+= frame>settleAt?ch:HEX[Math.floor(Math.random()*16)];}
+    el.textContent=out;if(frame<total+final.length)requestAnimationFrame(tick);else el.textContent=final;};
+  setTimeout(()=>requestAnimationFrame(tick),200+i*260);
+});
+/* ---- counters ---- */
+document.querySelectorAll("[data-count]").forEach((el,i)=>{const t=+el.dataset.count;if(reduce){el.textContent=String(t).padStart(2,"0");return;}
+  let n=0;const iv=setInterval(()=>{n++;const v=n<14?Math.floor(Math.random()*90):t;el.textContent=String(v).padStart(2,"0");if(n>=16){el.textContent=String(t).padStart(2,"0");clearInterval(iv);}},55+i*10);});
+/* ---- ticker ---- */
+const T=document.getElementById("ticker");const items=[];const V=[["CLEAR","ok"],["CLEAR","ok"],["CLEAR","ok"],["BLOCK","bad"],["CAUTION","warn"],["CLEAR","ok"],["LOW","ok"]];
+const CH=["ETH","TRON","BASE","SOL","ARB","POLY","AVAX","BNB"];
+function rhex(n){let o="";for(let i=0;i<n;i++)o+=HEX[Math.floor(Math.random()*16)];return o.toLowerCase();}
+for(let i=0;i<28;i++){const [v,c]=V[i%V.length];const ch=CH[i%CH.length];const a=ch==="TRON"?"T"+rhex(5).toUpperCase()+"…"+rhex(4).toUpperCase():ch==="SOL"?rhex(5)+"…"+rhex(4):"0x"+rhex(4)+"…"+rhex(4);
+  items.push(`<span>${a} <b>${ch}</b> ${i%3?"USDT":"USDC"} <b class="${c}">${v}</b> ${v==="BLOCK"?"HB_FROZEN":"sha "+rhex(6)}</span>`);}
+T.innerHTML=items.join("")+items.join("");
+/* ---- hex rain ---- */
+const c=document.getElementById("rain");if(c&&!reduce){const x=c.getContext("2d");let W,H,cols,drops;const size=()=>{const d=Math.min(devicePixelRatio||1,2);W=c.clientWidth;H=c.clientHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);cols=Math.floor(W/18);drops=Array.from({length:cols},()=>Math.random()*-60);};size();addEventListener("resize",size);
+  x.font="12px JetBrains Mono, monospace";let last=0;
+  const step=(t)=>{if(t-last>70){last=t;x.fillStyle="rgba(5,7,9,.22)";x.fillRect(0,0,W,H);
+    for(let i=0;i<cols;i++){const y=drops[i]*16;const ch=HEX[Math.floor(Math.random()*16)];x.fillStyle=Math.random()<.06?"#4CFF7A":"rgba(57,217,107,.35)";x.fillText(ch,i*18,y);if(y>H&&Math.random()>.975)drops[i]=0;drops[i]++;}}
+    requestAnimationFrame(step);};requestAnimationFrame(step);}
+/* ---- live terminal replay ---- */
+const term=document.getElementById("term");
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const sessions=[
+ {cmd:"assay screen TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --asset USDT",steps:[
+  ["dim","resolve   tron / USDT / TR7NHqje…gjLj6t (Tether, native)"],
+  ["scan","freeze    isBlackListed(address) …"],["r","freeze    TRUE  frozen by Tether"],
+  ["scan","sanctions ofac-sdn 266 TRX entries …"],["g","sanctions no match"],
+  ["hops","trace     hop 1/2 counterparties"],
+  ["V","BLOCK",100,"HB_FROZEN"],
+  ["r","BLOCK     Frozen by Tether for USDT on Tron. Anything it sends or receives will fail."],
+  ["dim","sha256    4f0f58f7b5e42008…  confidence medium"]]},
+ {cmd:"assay screen 0x0330070FD38Ec3bB94F58FA55D40368271E9e54A --chain ethereum --asset USDT",steps:[
+  ["dim","resolve   ethereum / USDT / 0xdAC17F…831ec7 (Tether, native)"],
+  ["scan","freeze    isBlackListed(address) …"],["g","freeze    false"],
+  ["scan","sanctions ofac-sdn 123 ETH entries …"],["r","sanctions MATCH  OFAC SDN digital currency address"],
+  ["scan","oracle    isSanctioned(address) @ 0x40C5…C8fb …"],["r","oracle    TRUE   chainalysis"],
+  ["V","BLOCK",100,"HB_SANCTIONED_LIST"],
+  ["dim","sources   agree  discrepancy=false"]]},
+ {cmd:"assay screen 0x28C6c06298d514Db089934071355E5743bf21d60 --chain ethereum --asset USDT",steps:[
+  ["dim","resolve   ethereum / USDT / 0xdAC17F…831ec7 (Tether, native)"],
+  ["scan","freeze    isBlackListed(address) …"],["g","freeze    false"],
+  ["scan","sanctions ofac-sdn + oracle …"],["g","sanctions clean on both sources"],
+  ["g","label     Binance 14 hot wallet  exchange_licensed  AE  VARA"],
+  ["hops","trace     boundary reached at licensed VASP"],
+  ["V","CLEAR",0,""],
+  ["dim","flag      SENDER_IS_LICENSED_VASP"]]},
+ {cmd:"assay screen 0x1111111111111111111111111111111111111111 --chain base --asset USDC --amount 25000",steps:[
+  ["dim","resolve   base / USDC / 0x833589…A02913 (Circle, native)"],
+  ["scan","freeze    isBlacklisted(address) …"],["g","freeze    false"],
+  ["scan","sanctions ofac-sdn + oracle @ 0x3A91…739B …"],["g","sanctions clean"],
+  ["a","identity  unverified  amount 25,000 ≥ AED 3,500 threshold  originator missing"],
+  ["V","CAUTION",0,"TRAVEL_RULE_DATA_REQUIRED"],
+  ["dim","floor     verdict floored at CAUTION, on-chain score 0"]]}
+];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function line(html){const d=document.createElement("div");d.innerHTML=html;term.appendChild(d);term.scrollTop=term.scrollHeight;return d;}
+async function typeCmd(cmd){const d=line('<span class="dim">$</span> ');let out="";for(const ch of cmd){out+=ch;d.innerHTML='<span class="dim">$</span> '+esc(out)+'<span class="cursor"></span>';if(!reduce)await sleep(ch===" "?40:14);}d.innerHTML='<span class="dim">$</span> '+esc(out);}
+async function scanLine(txt){const d=line('<span class="dim">'+esc(txt)+'</span> <span class="g" id="hx"></span>');const hx=d.querySelector("#hx");for(let i=0;i<10;i++){hx.textContent=rhex(8);if(!reduce)await sleep(45);}hx.remove();}
+async function hopsLine(txt){const d=line('<span class="dim">'+esc(txt)+'</span>  <span class="g">00</span>/25  <span class="dim">value-weighted</span> <span class="g">0.000</span>');const [n,v]=d.querySelectorAll(".g");for(let i=1;i<=25;i++){n.textContent=String(i).padStart(2,"0");v.textContent=(Math.random()*0.08).toFixed(3);if(!reduce)await sleep(28);}v.textContent="0.000";}
+async function verdict(v,score,code){const d=line('<span class="verdict '+v+'">'+v+'</span>  risk <span class="meter"><i style="width:0%;background:'+(v==="BLOCK"?"var(--red)":v==="CAUTION"?"var(--amber)":"var(--acid)")+'"></i></span><span class="num">000</span>/100 '+(code?' <span class="r">'+code+'</span>':''));const bar=d.querySelector("i"),num=d.querySelector(".num");for(let i=0;i<=20;i++){const p=Math.round(score*i/20);bar.style.width=p+"%";num.textContent=String(p).padStart(3,"0");if(!reduce)await sleep(22);}}
+async function run(){while(true){for(const sess of sessions){term.innerHTML="";await typeCmd(sess.cmd);await sleep(250);
+  for(const st of sess.steps){const [k,txt]=st;
+    if(k==="scan")await scanLine(txt);else if(k==="hops")await hopsLine(txt);else if(k==="V")await verdict(st[1],st[2],st[3]);
+    else line('<span class="'+(k==="r"?"r":k==="g"?"g":k==="a"?"a":"dim")+'">'+esc(txt)+'</span>');
+    await sleep(reduce?0:160);}
+  line('<span class="dim">$</span> <span class="cursor"></span>');await sleep(reduce?800:3200);}}}
+run();
+})();
+</script>
 </body>
 </html>
