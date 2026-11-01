@@ -1,13 +1,12 @@
 # DESIGN.md - Assay
 
-World: the assay office. Hallmarks, touchstones, the furnace. A place where value is tested before it is accepted. Dark, precise, warm where it matters.
+World: a security operations terminal. Hard edges, hairlines, uppercase, numerals with leading zeros. No animation, no decoration, no gamification. The page reads like the report it produces.
 
-Surfaces: base graphite-green `#0B1210`, raised `#111A17`, line `#20302B`. Text `#E6EFEA`, secondary tinted from the base hue `#8FA69C` (never neutral gray).
-Accents: clean = assay silver-mint `#9FE7C8`; risk = furnace amber `#F2A33A` rising to `#F25C3A` for block; data neutral = `#5FB3D9` used sparingly for links and data.
-Type: Bricolage Grotesque (display and body, variable, optical sizes), JetBrains Mono for addresses, hashes, amounts, scores and code only. Tracking never below -0.03em. Display max 6rem.
-Radius: 12px on panels, 6px on inputs, pills only on small chips.
-Elevation: borders, not shadows, on dark surfaces. Shadows only on floating elements, with offset and blur.
-Motion: one authored moment per surface. Landing: the assay line, where transfers flowing toward the receiving wallet are stamped clean or hot as they cross it. Exponential ease-out from a visible default. Reduced motion gets a still frame.
-Icons: authored SVG, 1.5px stroke, round joins, 20px grid.
-Layout: asymmetric; content sets the shape. No identical card grids, no eyebrow labels, no numbered section markers, no gradient text, no glass.
-Logo: hallmark stamp (rounded hexagon) containing an A whose crossbar extends as the assay line. Wordmark set in Bricolage Grotesque 600, lowercase "assay".
+Surfaces: near-black steel `#050709`, raised `#0B0F13`, hairlines `#161C22` / `#232C35`, a 64px hairline grid on the hero only. Text `#E8EDF2`, secondary `#8B98A6`, tertiary `#56636F`.
+Accents: acid `#C8FF3C` for the single call to action and CLEAR; hard red `#FF2E3F` for BLOCK and hard-block tags; amber `#FFB020` for CAUTION, pending phases and disabled coverage. Never more than one acid element per viewport.
+Type: Chakra Petch 600/700 uppercase, tracked +.02 to +.18em, for every heading, button and the wordmark; 300 weight for the muted half of the headline. JetBrains Mono for body, data, code and labels. Tabular numerals everywhere.
+Shapes: square corners only. Borders, never shadows. Tags are 1px outlined boxes. Meters are flat bars.
+Motion: none. Hover changes a border colour and nothing else.
+Icons: authored SVG, 1.6px stroke, square caps, miter joins, 20px grid.
+Layout: specification tables and a bordered matrix instead of cards. No eyebrow labels above headings except the single section tag. No gradient text, no glass, no glow.
+Logo: square stencil with an A whose crossbar is replaced by a full-width acid line (the assay line). Wordmark ASSAY in Chakra Petch 700, tracked .18em.
