@@ -37,4 +37,6 @@ Everything here is on fixtures until you run it. The API must be up (Railway red
 5. Solana: paste a solscan tx link of a USDC transfer. Pass: from, to and amount match solscan. This path reads the public RPC `getTransaction`, which may refuse very old signatures; `not_found` on an old tx is a limitation, not a bug, until Helius is wired for this read.
 6. Record the real responses for the fixture set: `CR_RECORD=1 pnpm --filter @cr/api dev` then repeat 1 to 3; review `data/fixtures/recorded.json` before committing.
 
+Verified live on Railway 2026-11-02 from the boot self-test: tronscan address link (TPsMJ3BE9ixSQ7guFbVLZ4eou6SATBSqHH: CLEAR, 5 inbound USDT transfers, 4 sources, freeze and OFAC checked), and a real tronscan tx link (a80ba5e7…2d96: 150 USDT, from, to and genuine-contract decoded, pays the receiver). The sender's own source list on that second lookup failed on TronGrid 429 and Tronscan 401, which is the key question in docs/QUESTIONS.md.
+
 Not yet verified live: TronGrid event payload field names (`result.from` / `result.to` as 0x-hex, handled for 41-hex and base58 too), EVM receipt decoding on L2s, Solana balance-delta sender/receiver pick on multi-hop swaps.

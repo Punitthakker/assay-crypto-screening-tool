@@ -57,7 +57,7 @@ Status key: VERIFIED (confirmed against issuer source today), LIVE-CHECK (addres
 | Provider | Scope | Free tier (as published, re-check) | Status |
 |---|---|---|---|
 | Etherscan API V2 | 60+ EVM chains, one key | ~3-5 calls/s, 100K/day | VERIFIED (docs) - key required even for free. Adapter: `EtherscanV2Explorer`, `tokentx` sorted desc, 200 per page, up to 5 pages |
-| Tronscan public API | Tron | keyless, soft limit; `TRONSCAN_API_KEY` optional | LIVE-CHECK. Adapter: `TronscanExplorer` (`/api/token_trc20/transfers`, pages of 50) and `TxResolver.tronscan` (`/api/transaction-info`). Fallback after TronGrid |
+| Tronscan API | Tron | key required: keyless calls answered HTTP 401 from Railway on 2026-11-02; free key from tronscan.org account settings, set `TRONSCAN_API_KEY` | LIVE-CHECK (shape), VERIFIED (needs key). Adapter: `TronscanExplorer` (`/api/token_trc20/transfers`, pages of 50) and `TxResolver.tronscan` (`/api/transaction-info`). Fallback after TronGrid |
 | TronGrid | Tron | 100K req/day, 15 QPS with key; keyless 429s after a few `/v1/` calls (seen on Railway 2026-11-02) | VERIFIED (docs). Adapter: `TronGridExplorer`, `/v1/accounts/{addr}/transactions/trc20?only_to=true`, fingerprint pagination |
 | Helius | Solana | 1M credits/mo, 10 RPS | VERIFIED (docs). Adapter: `HeliusExplorer`, enhanced `/v0/addresses/{addr}/transactions?type=TRANSFER`, key required; no keyless Solana path yet |
 | Blockscout | Ethereum, Base, Arbitrum, Polygon, OP hosted instances | hosted free, soft limit | VERIFIED (docs), hosts LIVE-CHECK. Adapter: `BlockscoutExplorer`, `/api/v2/addresses/{addr}/token-transfers?filter=to&token=`, `next_page_params` pagination. Override hosts with `BLOCKSCOUT_<CHAIN>` |
