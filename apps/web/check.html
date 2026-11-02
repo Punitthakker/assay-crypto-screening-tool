@@ -63,34 +63,39 @@ footer{margin-top:56px;padding:28px 0 40px;border-top:1px solid var(--line);colo
 
 <main class="wrap">
   <h1>Check a sender <em>before</em> you accept.</h1>
-  <p class="sub">Paste the sender's address, pick the chain the funds will arrive on and the asset. Live reads of the issuer freeze list, OFAC and the Chainalysis oracle. Nothing is stored except a hashed report id.</p>
+  <p class="sub">Paste the sender's address, a transaction hash, or the tronscan / etherscan link you are looking at. Assay screens the sender against the issuer freeze list, OFAC and the Chainalysis oracle, then lists where the sender's own funds came from in the last 90 days. Nothing is stored except a hashed report id.</p>
 
   <form class="card" id="f" autocomplete="off">
     <div class="row2">
       <div><label for="code">Access code</label><input class="field" id="code" placeholder="given to you by Punit" required></div>
-      <div><label for="amt">Amount (optional, enables the Travel Rule check)</label><input class="field" id="amt" inputmode="decimal" placeholder="e.g. 25000"></div>
+      <div><label for="amt">Amount (optional, enables the Travel Rule check; taken from the tx when a hash is given)</label><input class="field" id="amt" inputmode="decimal" placeholder="e.g. 25000"></div>
     </div>
     <div class="row">
-      <div><label for="addr">Sender address</label><input class="field" id="addr" placeholder="0x… / T… / Solana" spellcheck="false" required></div>
+      <div><label for="addr">Sender address, tx hash or explorer link</label><input class="field" id="addr" placeholder="0x… / T… / Solana / tronscan.org/#/transaction/… / etherscan.io/tx/…" spellcheck="false" required></div>
       <div><label for="chain">Chain</label><select class="field" id="chain"><option value="ethereum">Ethereum</option><option value="tron">Tron</option><option value="solana">Solana</option><option value="base">Base</option><option value="arbitrum">Arbitrum</option><option value="polygon">Polygon</option><option value="avalanche">Avalanche</option><option value="bnb">BNB Chain</option></select></div>
       <div><label for="asset">Asset</label><select class="field" id="asset"><option>USDT</option><option>USDC</option></select></div>
     </div>
+    <div class="row2">
+      <div><label for="rcv">Your receiving address (optional, confirms a tx pays you)</label><input class="field" id="rcv" placeholder="0x… / T… / Solana" spellcheck="false"></div>
+      <div></div>
+    </div>
     <div class="foot">
       <button class="btn" type="submit" id="go">Assay it</button>
-      <small id="status">Tron and Solana are inferred from the address format.</small>
+      <small id="status">Tron and Solana are inferred from the address format. Explorer links set the chain.</small>
     </div>
     <div class="samples" aria-label="Examples">
       <button type="button" data-a="0x28C6c06298d514Db089934071355E5743bf21d60" data-c="ethereum" data-s="USDT">Binance 14 (frozen after the hack)</button>
       <button type="button" data-a="TAUN6FwrnwwmaEqYcckffC7wYmbaS6cBiX" data-c="tron" data-s="USDT">Binance Tron hot wallet</button>
       <button type="button" data-a="9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" data-c="solana" data-s="USDC">Binance Solana wallet</button>
       <button type="button" data-a="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" data-c="base" data-s="USDC" data-m="25000">vitalik.eth, 25k USDC on Base</button>
+      <button type="button" data-a="https://tronscan.org/address/TPsMJ3BE9ixSQ7guFbVLZ4eou6SATBSqHH/transactions" data-c="tron" data-s="USDT">tronscan address link</button>
     </div>
   </form>
 
   <div class="err" id="err"></div>
   <div id="out"><div class="term" id="term"></div><details><summary>raw report json</summary><pre id="raw"></pre></details></div>
 
-  <footer>Assay is a screening support tool. Not legal advice and not a substitute for a regulated entity's own AML/CFT programme. CLEAR means not frozen and not sanctioned at the time of the check. Source-of-funds tracing is not yet enabled. Feedback: Telegram @punitfintech · pt@moneybee.world · Powered by MoneyBee</footer>
+  <footer>Assay is a screening support tool. Not legal advice and not a substitute for a regulated entity's own AML/CFT programme. CLEAR means not frozen and not sanctioned at the time of the check. The sources list is informational: each source is checked against labels, OFAC and the issuer freeze list, but exposure is not yet scored. Feedback: Telegram @punitfintech · pt@moneybee.world · Powered by MoneyBee</footer>
 </main>
 
 <script>
@@ -98,25 +103,70 @@ const API = "https://assay-api-production-fc4f.up.railway.app";
 const $ = s => document.querySelector(s);
 try { const c = localStorage.getItem("assay_code"); if (c) $("#code").value = c; } catch {}
 document.querySelectorAll(".samples button").forEach(b => b.addEventListener("click", () => { $("#addr").value = b.dataset.a; $("#chain").value = b.dataset.c; $("#asset").value = b.dataset.s; $("#amt").value = b.dataset.m || ""; }));
-$("#addr").addEventListener("input", e => { const v = e.target.value.trim(); if (/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(v)) $("#chain").value = "tron"; else if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v) && !v.startsWith("0x")) $("#chain").value = "solana"; });
+const HOSTS = [[/tronscan\./, "tron"], [/(^|\/\/)etherscan\.io|eth\.blockscout/, "ethereum"], [/basescan|base\.blockscout/, "base"], [/arbiscan|arbitrum\.blockscout/, "arbitrum"], [/polygonscan|polygon\.blockscout/, "polygon"], [/snowtrace|snowscan|avascan/, "avalanche"], [/bscscan/, "bnb"], [/solscan|solana\.fm|explorer\.solana/, "solana"]];
+$("#addr").addEventListener("input", e => {
+  const v = e.target.value.trim();
+  if (/^https?:\/\//.test(v)) { const h = HOSTS.find(([re]) => re.test(v)); if (h) $("#chain").value = h[1]; return; }
+  if (/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(v) || /^[0-9a-fA-F]{64}$/.test(v)) $("#chain").value = "tron";
+  else if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v) || /^[1-9A-HJ-NP-Za-km-z]{86,88}$/.test(v)) $("#chain").value = "solana";
+});
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 $("#f").addEventListener("submit", async e => {
   e.preventDefault();
   const code = $("#code").value.trim(); try { localStorage.setItem("assay_code", code); } catch {}
-  const body = { address: $("#addr").value.trim(), chain: $("#chain").value, asset: $("#asset").value };
+  const body = { input: $("#addr").value.trim(), chain: $("#chain").value, asset: $("#asset").value };
   const amt = Number($("#amt").value); if (amt > 0) body.amount = amt;
-  $("#go").disabled = true; $("#status").textContent = "reading issuer contracts, OFAC and oracle…"; $("#err").style.display = "none"; $("#out").style.display = "none";
+  const rcv = $("#rcv").value.trim(); if (rcv) body.receiver = rcv;
+  $("#go").disabled = true; $("#status").textContent = "resolving, reading issuer contracts, OFAC, oracle and inbound history…"; $("#err").style.display = "none"; $("#out").style.display = "none";
   try {
-    const r = await fetch(API + "/v1/screen", { method: "POST", headers: { "content-type": "application/json", "x-api-key": code }, body: JSON.stringify(body) });
+    const r = await fetch(API + "/v1/lookup", { method: "POST", headers: { "content-type": "application/json", "x-api-key": code }, body: JSON.stringify(body) });
     const j = await r.json();
     if (!r.ok) throw new Error(r.status === 401 ? "Access code not recognised." : r.status === 429 ? "Rate limit: 30 checks a minute per IP. Try again shortly." : (j.error || ("HTTP " + r.status)));
-    render(j);
+    renderLookup(j);
   } catch (ex) { $("#err").textContent = ex.message; $("#err").style.display = "block"; }
-  finally { $("#go").disabled = false; $("#status").textContent = "Tron and Solana are inferred from the address format."; }
+  finally { $("#go").disabled = false; $("#status").textContent = "Tron and Solana are inferred from the address format. Explorer links set the chain."; }
 });
-function render(r) {
+const short = a => a.length > 18 ? a.slice(0, 8) + "…" + a.slice(-6) : a;
+const link = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>`;
+function renderLookup(j) {
+  const head = [];
+  if (j.kind === "tx") {
+    const t = j.tx;
+    head.push(`<span class="d">tx       </span>${link(t.explorerUrl, short(t.hash))}  <span class="${t.status === "confirmed" ? "g" : "r"}">${esc(t.status)}</span>${t.blockNumber ? `  <span class="d">block ${t.blockNumber}</span>` : ""}${t.timestamp ? `  <span class="d">${new Date(t.timestamp * 1000).toISOString().replace("T", " ").slice(0, 16)} UTC</span>` : ""}`);
+    if (j.screened) {
+      const s = j.screened;
+      head.push(`<span class="d">transfer </span>${esc(s.value.toLocaleString("en-US", { maximumFractionDigits: 6 }))} ${esc(s.onChainSymbol)}  <span class="d">from</span> ${esc(s.from)}  <span class="d">to</span> ${esc(s.to)}`);
+      head.push(`<span class="d">asset    </span>${s.genuine ? `<span class="g">genuine ${esc(s.onChainSymbol)} contract</span>` : `<span class="a">bridged or unconfirmed contract</span>`}${s.paysReceiver === true ? `  <span class="g">pays your address</span>` : s.paysReceiver === false ? `  <span class="r">does NOT pay your address</span>` : ""}`);
+    }
+    for (const o of j.otherTokens || []) head.push(`<span class="a">warn  </span> the same tx moved a token that is not registry USDT/USDC: ${esc(o.token)} (${esc(o.from)} → ${esc(o.to)}). Look-alike risk.`);
+    if (!j.report) { head.push(""); head.push(`<span class="a">note  </span> ${esc(j.sourcesNote)}`); $("#term").innerHTML = head.join("\n"); $("#raw").textContent = JSON.stringify(j, null, 2); $("#out").style.display = "block"; return; }
+    head.push(`<span class="d">screened </span>sender of this transfer`);
+    head.push("");
+  } else {
+    head.push(`<span class="d">address  </span>${link(j.explorerUrl, j.address)}  <span class="d">${esc(j.chain)}</span>`);
+    head.push("");
+  }
+  render(j.report, head, j.sources, j.sourcesNote, j.ms);
+  $("#raw").textContent = JSON.stringify(j, null, 2);
+}
+function renderSources(sources, note) {
+  const lines = [""];
+  lines.push(`<span class="d">sources  </span>where the sender's inbound funds came from (last 90 days, by value)`);
+  if (!sources.length) { lines.push(`<span class="d">         </span>${esc(note)}`); return lines; }
+  const col = s => s.status === "sanctioned" || s.status === "frozen" ? "r" : s.status === "mixer" || s.status === "scam" || s.status === "darknet" ? "r" : s.status === "gambling" || s.status === "unlicensed" ? "a" : s.status === "licensed" ? "g" : "d";
+  for (const s of sources.slice(0, 25)) {
+    const pct = (s.share * 100).toFixed(1).padStart(5) + "%";
+    const tag = s.status.toUpperCase().padEnd(10);
+    const who = s.label ? ` ${esc(s.label.name)}` : "";
+    lines.push(`<span class="${col(s)}">${tag}</span> ${pct}  ${esc(s.total.toLocaleString("en-US", { maximumFractionDigits: 2 })).padStart(14)}  ${String(s.count).padStart(3)}tx  ${esc(short(s.address))}${who}  <span class="d">last ${esc(s.lastSeen.slice(0, 10))}</span>${s.frozen === null && s.sanctioned === null ? `  <span class="d">(not checked, beyond top 10)</span>` : ""}`);
+  }
+  if (sources.length > 25) lines.push(`<span class="d">         </span>+${sources.length - 25} more in the raw json`);
+  lines.push(`<span class="d">         </span>${esc(note)}`);
+  return lines;
+}
+function render(r, head = [], sources, note, ms) {
   const col = r.verdict === "BLOCK" ? "var(--red)" : r.verdict === "CAUTION" || r.verdict === "HIGH" ? "var(--amber)" : "var(--acid)";
-  const lines = [];
+  const lines = [...head];
   lines.push(`<span class="verdict ${r.verdict}">${r.verdict}</span>  risk <span class="meter"><i style="width:${r.score}%;background:${col}"></i></span>${String(r.score).padStart(3, "0")}/100  confidence ${r.confidence}${r.hardBlock ? `  <span class="r">${r.hardBlock}</span>` : ""}`);
   if (r.resolvedToken) lines.push(`<span class="d">asset    </span>${esc(r.resolvedToken.onChainSymbol)}  <span class="d">${esc(r.resolvedToken.issuer)}, ${esc(r.resolvedToken.kind)}</span>  ${esc(r.resolvedToken.address)}`);
   lines.push(`<span class="d">chain    </span>${esc(r.request.chain)}   <span class="d">identity </span>${esc(r.identity)}`);
@@ -125,9 +175,10 @@ function render(r) {
   lines.push("");
   lines.push(`<span class="d">coverage </span>` + r.coverage.map(c => `${esc(c.source)}=<span class="${c.status === "ok" ? "g" : c.status === "disabled" || c.status === "partial" ? "a" : c.status === "unavailable" ? "r" : "d"}">${c.status}</span>`).join("  "));
   if (r.flags && r.flags.length) lines.push(`<span class="d">flags    </span>${esc(r.flags.join(" | "))}`);
-  lines.push(`<span class="d">sha256   </span>${esc(r.reportHash)}  <span class="d">${esc(r.checkedAt)}  ${r.ms ?? ""}ms</span>`);
+  lines.push(`<span class="d">sha256   </span>${esc(r.reportHash)}  <span class="d">${esc(r.checkedAt)}  ${ms ?? r.ms ?? ""}ms</span>`);
+  if (sources) lines.push(...renderSources(sources, note));
   $("#term").innerHTML = lines.join("\n");
-  $("#raw").textContent = JSON.stringify(r, null, 2);
+  if (!sources) $("#raw").textContent = JSON.stringify(r, null, 2);
   $("#out").style.display = "block";
 }
 </script>

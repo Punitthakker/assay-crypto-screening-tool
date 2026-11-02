@@ -17,3 +17,15 @@ describe("address detection", () => {
     expect(isSolanaAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")).toBe(false);
   });
 });
+
+describe("tron hex round trip", () => {
+  it("encodes 41-hex, 0x-hex and bare hex back to the same base58check address", async () => {
+    const { tronHexToBase58 } = await import("./address.js");
+    const addr = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+    const hex41 = tronToHex(addr);
+    expect(tronHexToBase58(hex41)).toBe(addr);
+    expect(tronHexToBase58("0x" + hex41.slice(2))).toBe(addr);
+    expect(tronHexToBase58(hex41.slice(2))).toBe(addr);
+    expect(() => tronHexToBase58("0x1234")).toThrow();
+  });
+});

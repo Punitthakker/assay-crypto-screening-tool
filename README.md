@@ -16,6 +16,7 @@ Working today, offline against recorded fixtures and online against public RPCs:
 - Travel Rule identity floor (AED 3,500 default)
 - Scoring v1 with hard blocks, caps, bands, confidence, SHA-256 report hash (`docs/SCORING.md`)
 - CLI with human and JSON output, exit code 3 on BLOCK
+- Screen by transaction (2026-11-02): paste a tx hash or a tronscan / etherscan link on /check or `POST /v1/lookup`; the sender of that transfer is screened and its inbound sources are listed with label, OFAC and freeze checks
 - Explorer adapters (Phase 1b, 2026-11-02): inbound transfers of the screened token over 90 days or 200 transfers via Etherscan V2, Blockscout, Routescan, TronGrid, Helius; keyless fallback on Ethereum, Base, Arbitrum, Polygon, Avalanche, Tron
 
 Not yet: 2-hop trace and behavioural signals (next), Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). While the trace is off, confidence never exceeds `medium` by design. Explorer adapters are tested on fixtures only until `pnpm verify:explorers` has been run live (`docs/VERIFY.md`).

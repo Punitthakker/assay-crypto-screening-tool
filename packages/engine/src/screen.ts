@@ -22,6 +22,7 @@ import {
   SanctionsOracleAdapter,
   defaultWindow,
   type AdapterResult,
+  type Transfer,
   type Transport,
 } from "@cr/datasources";
 import { SCORING_VERSION, computeConfidence, computeScore } from "./score.js";
@@ -34,8 +35,8 @@ export interface EngineOptions {
   env?: NodeJS.ProcessEnv;
   /** explorer router for inbound transfers; false disables the fetch (unit tests, air-gapped runs) */
   explorer?: ExplorerRouter | false;
-  /** trace window; defaults to 90 days or 200 transfers */
-  window?: { windowDays?: number; maxTransfers?: number };
+  /** trace window; defaults to 90 days or 200 transfers. nowMs pins the clock for fixtures. */
+  window?: { windowDays?: number; maxTransfers?: number; nowMs?: number };
 }
 
 export class Engine {
@@ -56,6 +57,11 @@ export class Engine {
   }
 
   async screen(input: unknown): Promise<Report> {
+    return (await this.screenWithFlow(input)).report;
+  }
+
+  /** Same as screen() but also hands back the sender's inbound transfers for source listing. */
+  async screenWithFlow(input: unknown): Promise<{ report: Report; transfers: Transfer[]; token?: TokenDef }> {
     const req: ScreenRequest = ScreenRequestSchema.parse(input);
     const chain = getChain(req.chain);
     const checkedAt = new Date().toISOString();
@@ -111,11 +117,13 @@ export class Engine {
 
     // 4. inbound transfers of the screened token (explorer adapters). The trace that scores them is the next item;
     //    until it lands, fund-flow stays declared as disabled and confidence stays capped at medium.
+    let transfers: Transfer[] = [];
     if (this.explorer && token) {
       const w = this.opts.window ?? {};
-      const ex = await this.explorer.screen(req.address, token, defaultWindow({ ...(w.windowDays !== undefined ? { windowDays: w.windowDays } : {}), ...(w.maxTransfers !== undefined ? { maxTransfers: w.maxTransfers } : {}) }));
+      const ex = await this.explorer.screen(req.address, token, defaultWindow({ ...(w.windowDays !== undefined ? { windowDays: w.windowDays } : {}), ...(w.maxTransfers !== undefined ? { maxTransfers: w.maxTransfers } : {}), ...(w.nowMs !== undefined ? { nowMs: w.nowMs } : {}) }));
       evidence.push(...ex.evidence);
       coverage.push(ex.coverage);
+      transfers = ex.transfers;
     }
     coverage.push({ source: "fund-flow", status: "disabled", detail: "2-hop trace lands next; exposure and behavioural signals not evaluated" });
 
@@ -163,7 +171,7 @@ export class Engine {
       disclaimer: DISCLAIMER,
     };
     const reportHash = createHash("sha256").update(JSON.stringify(report)).digest("hex");
-    return { ...report, reportHash };
+    return { report: { ...report, reportHash }, transfers, ...(token ? { token } : {}) };
   }
 
   private resolveToken(req: ScreenRequest, checkedAt: string): { token?: TokenDef; authenticity?: Evidence } {

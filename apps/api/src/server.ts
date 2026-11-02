@@ -2,12 +2,14 @@
  * Assay API - Phase 1 minimal service.
  *   GET  /health            liveness + transport mode
  *   POST /v1/screen         { address, chain, asset, amount?, tokenContract?, originator? } -> Report
+ *   POST /v1/lookup         { input, chain?, asset?, amount?, receiver? } -> AddressReport | TxReport
+ *                           input: address, tx hash, explorer address link or explorer tx link
  *   GET  /v1/chains         registry summary
  * Optional: ASSAY_API_KEY env makes x-api-key mandatory. In-memory rate limit 30 req/min per IP.
  */
 import { createServer } from "node:http";
 import path from "node:path";
-import { Engine } from "@cr/engine";
+import { Engine, TxScreener } from "@cr/engine";
 import { LabelStore, transportFromEnv } from "@cr/datasources";
 import { CHAINS, ENABLED_CHAINS, TOKENS, DISCLAIMER } from "@cr/shared";
 import { selfTest } from "./selftest.js";
@@ -18,7 +20,9 @@ process.chdir(root);
 const PORT = Number(process.env.PORT ?? 8080);
 const API_KEY = process.env.ASSAY_API_KEY;
 const transport = transportFromEnv(process.env);
-const engine = new Engine({ transport, labels: new LabelStore(), env: process.env });
+const labels = new LabelStore();
+const engine = new Engine({ transport, labels, env: process.env });
+const lookup = new TxScreener(engine, transport, labels, process.env);
 const started = new Date().toISOString();
 
 const hits = new Map<string, { n: number; t: number }>();
@@ -67,6 +71,18 @@ const server = createServer(async (req, res) => {
       const t0 = Date.now();
       const report = await engine.screen(body);
       return send(res, 200, { ...report, ms: Date.now() - t0 });
+    } catch (e) {
+      return send(res, 400, { error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  if (url.pathname === "/v1/lookup" && req.method === "POST") {
+    if (API_KEY && req.headers["x-api-key"] !== API_KEY) return send(res, 401, { error: "invalid api key" });
+    if (limited(ip)) return send(res, 429, { error: "rate limit: 30 requests per minute" });
+    try {
+      const body = await readJson(req);
+      const t0 = Date.now();
+      const out = await lookup.lookup(body);
+      return send(res, 200, { ...out, ms: Date.now() - t0 });
     } catch (e) {
       return send(res, 400, { error: e instanceof Error ? e.message : String(e) });
     }

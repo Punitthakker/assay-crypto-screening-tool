@@ -5,6 +5,9 @@ One item per daily build. The scheduled task "Assay daily build" picks the first
 ## Phase 1a - shipped 2026-11-01
 - [x] Registry, issuer freeze, OFAC + oracle sanctions, asset authenticity, labels seed, Travel Rule floor, scoring v1, CLI, fixtures, brand, product page
 
+## Out of band - requested by Punit
+- [x] Screen by transaction hash or explorer link on /check and `POST /v1/lookup`, with sender sources listed - shipped 2026-11-02, live check pending (docs/VERIFY.md step 3)
+
 ## Phase 1b
 - [x] Explorer adapters: Etherscan V2, TronGrid, Helius, Blockscout fallback (inbound transfers of the screened token, 90 days or 200 transfers) - shipped 2026-11-02, live check pending (docs/VERIFY.md step 2)
 - [ ] 2-hop backward trace, value-weighted and hop-decayed exposure, fan-out cap 25, licensed exchange boundary, dust floor, fund-flow coverage line

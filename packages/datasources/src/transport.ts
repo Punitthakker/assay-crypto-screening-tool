@@ -11,6 +11,17 @@ export interface SolanaTokenAccount {
   amount: string;
 }
 
+export interface EvmReceipt {
+  hash: string;
+  status: "success" | "reverted";
+  blockNumber: number;
+  /** unix seconds of the containing block */
+  timestamp: number;
+  from: string;
+  to: string | null;
+  logs: { address: string; topics: string[]; data: string }[];
+}
+
 /**
  * Everything that touches the network goes through here, so the whole engine
  * can run from recorded fixtures (CI, demos, the build sandbox) or live.
@@ -19,6 +30,8 @@ export interface Transport {
   readonly mode: TransportMode;
   evmCall(chain: ChainId, to: Hex, data: Hex): Promise<Hex>;
   evmGetCode(chain: ChainId, address: Hex): Promise<Hex>;
+  /** receipt plus block timestamp; throws when the hash is unknown to the RPC (pending or wrong chain) */
+  evmGetTransactionReceipt(chain: ChainId, hash: Hex): Promise<EvmReceipt>;
   tronConstantCall(contractBase58: string, selector: string, paramHex: string): Promise<Hex>;
   solanaTokenAccounts(owner: string, mint: string): Promise<SolanaTokenAccount[]>;
   fetchJson<T = unknown>(url: string, init?: RequestInit): Promise<T>;
@@ -64,6 +77,21 @@ export class LiveTransport implements Transport {
   async evmGetCode(chain: ChainId, address: Hex): Promise<Hex> {
     const code = await withTimeout(this.client(chain).getCode({ address }), this.timeoutMs * 2, `eth_getCode ${chain}`);
     return (code ?? "0x") as Hex;
+  }
+
+  async evmGetTransactionReceipt(chain: ChainId, hash: Hex): Promise<EvmReceipt> {
+    const c = this.client(chain);
+    const r = await withTimeout(c.getTransactionReceipt({ hash }), this.timeoutMs * 2, `eth_getTransactionReceipt ${chain}`);
+    const b = await withTimeout(c.getBlock({ blockNumber: r.blockNumber }), this.timeoutMs * 2, `eth_getBlockByNumber ${chain}`);
+    return {
+      hash,
+      status: r.status === "success" ? "success" : "reverted",
+      blockNumber: Number(r.blockNumber),
+      timestamp: Number(b.timestamp),
+      from: r.from,
+      to: r.to ?? null,
+      logs: r.logs.map((l) => ({ address: l.address, topics: [...l.topics], data: l.data })),
+    };
   }
 
   async tronConstantCall(contractBase58: string, selector: string, paramHex: string): Promise<Hex> {
@@ -174,6 +202,9 @@ export class FixtureTransport implements Transport {
   evmGetCode(chain: ChainId, address: Hex) {
     return this.get(`code:${chain}:${address.toLowerCase()}`, () => this.recordFrom!.evmGetCode(chain, address));
   }
+  evmGetTransactionReceipt(chain: ChainId, hash: Hex) {
+    return this.get<EvmReceipt>(`receipt:${chain}:${hash.toLowerCase()}`, () => this.recordFrom!.evmGetTransactionReceipt(chain, hash));
+  }
   tronConstantCall(c: string, s: string, p: string) {
     return this.get(`tron:${c}:${s}:${p}`, () => this.recordFrom!.tronConstantCall(c, s, p));
   }
@@ -189,7 +220,7 @@ export class FixtureTransport implements Transport {
 }
 
 export function transportFromEnv(env: NodeJS.ProcessEnv = process.env, fixtureFile?: string): Transport {
-  const file = fixtureFile ?? path.resolve(process.cwd(), "data/fixtures/recorded.json");
+  const file = fixtureFile ?? path.resolve(process.cwd(), env.CR_FIXTURE_FILE ?? "data/fixtures/recorded.json");
   if (env.CR_RECORD === "1") return new FixtureTransport(file, new LiveTransport(env));
   if ((env.CR_TRANSPORT ?? "live") === "fixture") return new FixtureTransport(file);
   return new LiveTransport(env);

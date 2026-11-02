@@ -1,0 +1,185 @@
+{
+  "url:https://api.trongrid.io/v1/transactions/9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f/events": {
+    "data": [
+      {
+        "block_number": 70000000,
+        "block_timestamp": 1793534400000,
+        "caller_contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "event_index": 0,
+        "event_name": "Transfer",
+        "result": {
+          "0": "0x00000000000000000000000000000000000000a1",
+          "1": "0x00000000000000000000000000000000000000b2",
+          "2": "5000000000",
+          "from": "0x00000000000000000000000000000000000000a1",
+          "to": "0x00000000000000000000000000000000000000b2",
+          "value": "5000000000"
+        },
+        "result_type": {
+          "from": "address",
+          "to": "address",
+          "value": "uint256"
+        },
+        "event": "Transfer(address,address,uint256)",
+        "transaction_id": "9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "at": 1793577600000,
+      "page_size": 1
+    }
+  },
+  "url:https://api.trongrid.io/v1/transactions/0000000000000000000000000000000000000000000000000000000000000000/events": {
+    "data": [],
+    "success": true,
+    "meta": {
+      "at": 1793577600000,
+      "page_size": 0
+    }
+  },
+  "tron:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t:isBlackListed(address):00000000000000000000000000000000000000000000000000000000000000a1": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "tron:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t:isBlackListed(address):0000000000000000000000000583a68a3bcd86c25ab1bee482bac04a216b0261": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "tron:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t:isBlackListed(address):00000000000000000000000000000000000000000000000000000000000000c3": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "tron:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t:isBlackListed(address):00000000000000000000000000000000000000000000000000000000000000d4": "0x0000000000000000000000000000000000000000000000000000000000000001",
+  "url:https://api.trongrid.io/v1/accounts/T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K/transactions/trc20?only_to=true&only_confirmed=true&limit=200&contract_address=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&min_timestamp=1785801600000&order_by=block_timestamp%2Cdesc": {
+    "data": [
+      {
+        "transaction_id": "s1",
+        "token_info": {
+          "symbol": "USDT",
+          "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "decimals": 6,
+          "name": "Tether USD"
+        },
+        "block_timestamp": 1793491200000,
+        "from": "TAUN6FwrnwwmaEqYcckffC7wYmbaS6cBiX",
+        "to": "T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K",
+        "type": "Transfer",
+        "value": "6000000000"
+      },
+      {
+        "transaction_id": "s2",
+        "token_info": {
+          "symbol": "USDT",
+          "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "decimals": 6,
+          "name": "Tether USD"
+        },
+        "block_timestamp": 1793318400000,
+        "from": "T9yD14Nj9j7xAB4dbGeiX9h8unkhH5vBqB",
+        "to": "T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K",
+        "type": "Transfer",
+        "value": "1500000000"
+      },
+      {
+        "transaction_id": "s3",
+        "token_info": {
+          "symbol": "USDT",
+          "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "decimals": 6,
+          "name": "Tether USD"
+        },
+        "block_timestamp": 1792800000000,
+        "from": "T9yD14Nj9j7xAB4dbGeiX9h8unkjBq477c",
+        "to": "T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K",
+        "type": "Transfer",
+        "value": "2500000000"
+      },
+      {
+        "transaction_id": "s4",
+        "token_info": {
+          "symbol": "USDT",
+          "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "decimals": 6,
+          "name": "Tether USD"
+        },
+        "block_timestamp": 1791849600000,
+        "from": "TAUN6FwrnwwmaEqYcckffC7wYmbaS6cBiX",
+        "to": "T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K",
+        "type": "Transfer",
+        "value": "1000000000"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "at": 1793577600000,
+      "page_size": 4
+    }
+  },
+  "receipt:ethereum:0xe1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1": {
+    "hash": "0xe1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1",
+    "status": "success",
+    "blockNumber": 21500000,
+    "timestamp": 1793556000,
+    "from": "0x00000000000000000000000000000000000000a1",
+    "to": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "logs": [
+      {
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "topics": [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x00000000000000000000000000000000000000000000000000000000000000a1",
+          "0x00000000000000000000000000000000000000000000000000000000000000b2"
+        ],
+        "data": "0x00000000000000000000000000000000000000000000000000000002cb417800"
+      },
+      {
+        "address": "0x00000000000000000000000000000000000000f4",
+        "topics": [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x00000000000000000000000000000000000000000000000000000000000000a1",
+          "0x00000000000000000000000000000000000000000000000000000000000000b2"
+        ],
+        "data": "0x00000000000000000000000000000000000000000000000000000002cb417800"
+      }
+    ]
+  },
+  "receipt:ethereum:0xe2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2": {
+    "hash": "0xe2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2",
+    "status": "success",
+    "blockNumber": 21500001,
+    "timestamp": 1793560320,
+    "from": "0x00000000000000000000000000000000000000a1",
+    "to": "0x00000000000000000000000000000000000000f4",
+    "logs": [
+      {
+        "address": "0x00000000000000000000000000000000000000f4",
+        "topics": [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x00000000000000000000000000000000000000000000000000000000000000a1",
+          "0x00000000000000000000000000000000000000000000000000000000000000b2"
+        ],
+        "data": "0x00000000000000000000000000000000000000000000000000000002cb417800"
+      }
+    ]
+  },
+  "evm:ethereum:0xdac17f958d2ee523a2206206994597c13d831ec7:0xe47d606000000000000000000000000000000000000000000000000000000000000000a1": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "evm:ethereum:0xdac17f958d2ee523a2206206994597c13d831ec7:0xe47d606000000000000000000000000000000000000000000000000000000000000000c3": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "evm:ethereum:0x40c57923924b5c5c5455c48d93317139addac8fb:0xdf592f7d00000000000000000000000000000000000000000000000000000000000000a1": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "url:https://eth.blockscout.com/api/v2/addresses/0x00000000000000000000000000000000000000a1/token-transfers?type=ERC-20&filter=to&token=0xdAC17F958D2ee523a2206206994597C13D831ec7": {
+    "items": [
+      {
+        "transaction_hash": "0xb1",
+        "timestamp": "2026-10-31T00:00:00.000Z",
+        "block_number": 21400000,
+        "from": {
+          "hash": "0x00000000000000000000000000000000000000c3"
+        },
+        "to": {
+          "hash": "0x00000000000000000000000000000000000000a1"
+        },
+        "token": {
+          "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "decimals": "6"
+        },
+        "total": {
+          "value": "20000000000",
+          "decimals": "6"
+        }
+      }
+    ],
+    "next_page_params": null
+  }
+}

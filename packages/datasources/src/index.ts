@@ -5,3 +5,4 @@ export * from "./adapters/issuer-freeze.js";
 export * from "./adapters/sanctions-oracle.js";
 export * from "./adapters/labels.js";
 export * from "./adapters/explorer.js";
+export * from "./adapters/tx.js";

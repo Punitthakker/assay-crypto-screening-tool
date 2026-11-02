@@ -19,3 +19,22 @@ Pass: "All sources verified." and `docs/SOURCES.verified.json` updated. Run befo
 6. Optional, to refresh fixtures from real data: `CR_RECORD=1 pnpm verify:explorers`. Keys are redacted from fixture keys automatically. Review `data/fixtures/recorded.json` before committing; it will contain real addresses and tx hashes.
 
 Not yet verified live, in order of risk: Routescan's Etherscan-compatible endpoint shape for Avalanche; Blockscout `next_page_params` pagination on the hosted instances; Helius `type=TRANSFER` filtering (token transfers inside swaps are excluded on purpose, confirm that is what you want).
+
+## 3. Screen by transaction and explorer link (added 2026-11-02)
+
+Everything here is on fixtures until you run it. The API must be up (Railway redeploys from main) or run it locally with `pnpm --filter @cr/api dev` and use `http://localhost:8080`.
+
+1. Address link, the one you sent:
+   ```bash
+   curl -s -X POST https://assay-api-production-fc4f.up.railway.app/v1/lookup \
+     -H 'content-type: application/json' -H 'x-api-key: <access code>' \
+     -d '{"input":"https://tronscan.org/address/TPsMJ3BE9ixSQ7guFbVLZ4eou6SATBSqHH/transactions"}' | jq '{kind, verdict: .report.verdict, note: .sourcesNote, sources: [.sources[] | {status, share, total, count, address, label: .label.name}]}'
+   ```
+   Pass: `kind: "address"`, a verdict, and sources whose totals match tronscan's USDT inbound for the last 90 days (cap 200 transfers; if tronscan shows more than 200 inbound transfers, `sourcesNote` must say capped).
+2. Transaction link: open any USDT transfer on tronscan, copy the URL, paste it on /check with your own receiving address in the optional field. Pass: `transfer` line matches tronscan's amount, from and to; `pays your address` shows green when the to address is yours and red when it is not.
+3. Ethereum tx hash with the chain selector on Ethereum. Pass: same as 2 via etherscan. Then try the same hash with Base selected: expect `not found` (the hash does not exist there), never a report.
+4. Fake token: find a tx on etherscan that moves a look-alike "USDT" (any token with that symbol outside the registry). Pass: no report, note says look-alike, `otherTokens` lists the contract.
+5. Solana: paste a solscan tx link of a USDC transfer. Pass: from, to and amount match solscan. This path reads the public RPC `getTransaction`, which may refuse very old signatures; `not_found` on an old tx is a limitation, not a bug, until Helius is wired for this read.
+6. Record the real responses for the fixture set: `CR_RECORD=1 pnpm --filter @cr/api dev` then repeat 1 to 3; review `data/fixtures/recorded.json` before committing.
+
+Not yet verified live: TronGrid event payload field names (`result.from` / `result.to` as 0x-hex, handled for 41-hex and base58 too), EVM receipt decoding on L2s, Solana balance-delta sender/receiver pick on multi-hop swaps.
