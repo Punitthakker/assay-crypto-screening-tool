@@ -16,8 +16,9 @@ Working today, offline against recorded fixtures and online against public RPCs:
 - Travel Rule identity floor (AED 3,500 default)
 - Scoring v1 with hard blocks, caps, bands, confidence, SHA-256 report hash (`docs/SCORING.md`)
 - CLI with human and JSON output, exit code 3 on BLOCK
+- Explorer adapters (Phase 1b, 2026-11-02): inbound transfers of the screened token over 90 days or 200 transfers via Etherscan V2, Blockscout, Routescan, TronGrid, Helius; keyless fallback on Ethereum, Base, Arbitrum, Polygon, Avalanche, Tron
 
-Not yet: fund-flow trace and behavioural signals (Phase 1b, explorer adapters), Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). While fund-flow is off, confidence never exceeds `medium` by design.
+Not yet: 2-hop trace and behavioural signals (next), Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). While the trace is off, confidence never exceeds `medium` by design. Explorer adapters are tested on fixtures only until `pnpm verify:explorers` has been run live (`docs/VERIFY.md`).
 
 ## Run
 
@@ -25,6 +26,7 @@ Not yet: fund-flow trace and behavioural signals (Phase 1b, explorer adapters), 
 pnpm install
 pnpm test                                   # fixtures only, no network
 pnpm verify:sources                         # LIVE: checks every contract, oracle and list; writes docs/SOURCES.verified.json
+pnpm verify:explorers                       # LIVE: one inbound-transfer fetch per chain; writes docs/EXPLORERS.verified.json
 pnpm screen TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t -a USDT                       # Tron inferred
 pnpm screen 0x28C6c06298d514Db089934071355E5743bf21d60 -c ethereum -a USDT
 pnpm screen <addr> -c base -a USDC -m 25000  # amount enables the Travel Rule check
@@ -40,11 +42,11 @@ No API keys are required. `.env.example` lists optional keys that raise rate lim
 ```
 apps/cli            screen + verify-sources
 packages/shared     chains, tokens, address parsing, zod schemas
-packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, sanctions-oracle, labels
+packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, sanctions-oracle, labels, explorer (etherscan-v2, blockscout, routescan, trongrid, helius)
 packages/engine     scoring, orchestration, report
 data/labels         seed labels (json)
-data/fixtures       recorded.json (on-chain responses), ofac-snapshot.json
-docs                SOURCES, REGISTRY, SCORING, DECISIONS
+data/fixtures       recorded.json (on-chain responses), ofac-snapshot.json, explorers.json (hand-encoded, build-explorers.ts)
+docs                SOURCES, REGISTRY, SCORING, DECISIONS, VERIFY, QUESTIONS
 ```
 
 ## Licences of data used

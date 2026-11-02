@@ -124,6 +124,25 @@ export class LiveTransport implements Transport {
   }
 }
 
+const SECRET_PARAMS = ["apikey", "api-key", "api_key"];
+
+/** Fixture keys never carry a provider key: query params that look like secrets are blanked. */
+export function redactUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    let touched = false;
+    for (const p of SECRET_PARAMS) {
+      if (u.searchParams.has(p)) {
+        u.searchParams.set(p, "REDACTED");
+        touched = true;
+      }
+    }
+    return touched ? u.toString() : url;
+  } catch {
+    return url;
+  }
+}
+
 /**
  * Fixture transport: answers from data/fixtures/recorded.json.
  * Keys:  evm:<chain>:<to>:<data>    tron:<contract>:<selector>:<param>
@@ -162,10 +181,10 @@ export class FixtureTransport implements Transport {
     return this.get(`sol:${owner}:${mint}`, () => this.recordFrom!.solanaTokenAccounts(owner, mint));
   }
   fetchJson<T>(url: string, init?: RequestInit) {
-    return this.get<T>(`url:${url}`, () => this.recordFrom!.fetchJson<T>(url, init));
+    return this.get<T>(`url:${redactUrl(url)}`, () => this.recordFrom!.fetchJson<T>(url, init));
   }
   fetchText(url: string, init?: RequestInit) {
-    return this.get<string>(`text:${url}`, () => this.recordFrom!.fetchText(url, init));
+    return this.get<string>(`text:${redactUrl(url)}`, () => this.recordFrom!.fetchText(url, init));
   }
 }
 

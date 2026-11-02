@@ -15,10 +15,12 @@ import {
   type Verdict,
 } from "@cr/shared";
 import {
+  ExplorerRouter,
   IssuerFreezeAdapter,
   LabelStore,
   OfacAdapter,
   SanctionsOracleAdapter,
+  defaultWindow,
   type AdapterResult,
   type Transport,
 } from "@cr/datasources";
@@ -30,6 +32,10 @@ export interface EngineOptions {
   /** USD equivalent of the Travel Rule threshold; default AED 3,500 */
   travelRuleThresholdUsd?: number;
   env?: NodeJS.ProcessEnv;
+  /** explorer router for inbound transfers; false disables the fetch (unit tests, air-gapped runs) */
+  explorer?: ExplorerRouter | false;
+  /** trace window; defaults to 90 days or 200 transfers */
+  window?: { windowDays?: number; maxTransfers?: number };
 }
 
 export class Engine {
@@ -38,6 +44,7 @@ export class Engine {
   private oracle: SanctionsOracleAdapter;
   private labels: LabelStore;
   private threshold: number;
+  private explorer: ExplorerRouter | undefined;
 
   constructor(private opts: EngineOptions) {
     this.ofac = new OfacAdapter(opts.transport);
@@ -45,6 +52,7 @@ export class Engine {
     this.oracle = new SanctionsOracleAdapter(opts.transport);
     this.labels = opts.labels ?? new LabelStore();
     this.threshold = opts.travelRuleThresholdUsd ?? Number(opts.env?.CR_TRAVEL_RULE_THRESHOLD_USD ?? 953);
+    this.explorer = opts.explorer === false ? undefined : (opts.explorer ?? new ExplorerRouter(opts.transport, opts.env ?? process.env));
   }
 
   async screen(input: unknown): Promise<Report> {
@@ -101,8 +109,15 @@ export class Engine {
     }
     coverage.push({ source: "labels", status: this.labels.size > 0 ? "ok" : "partial", detail: `${this.labels.size} labels loaded` });
 
-    // 4. fund-flow + behavioural: Phase 1b (explorer adapters). Declared honestly as disabled.
-    coverage.push({ source: "fund-flow", status: "disabled", detail: "explorer trace lands in Phase 1b; exposure and behavioural signals not evaluated" });
+    // 4. inbound transfers of the screened token (explorer adapters). The trace that scores them is the next item;
+    //    until it lands, fund-flow stays declared as disabled and confidence stays capped at medium.
+    if (this.explorer && token) {
+      const w = this.opts.window ?? {};
+      const ex = await this.explorer.screen(req.address, token, defaultWindow({ ...(w.windowDays !== undefined ? { windowDays: w.windowDays } : {}), ...(w.maxTransfers !== undefined ? { maxTransfers: w.maxTransfers } : {}) }));
+      evidence.push(...ex.evidence);
+      coverage.push(ex.coverage);
+    }
+    coverage.push({ source: "fund-flow", status: "disabled", detail: "2-hop trace lands next; exposure and behavioural signals not evaluated" });
 
     // 5. identity layer
     let identity: Report["identity"] = "unverified";

@@ -1,0 +1,352 @@
+{
+  "url:https://api.etherscan.io/v2/api?chainid=1&module=account&action=tokentx&contractaddress=0xdAC17F958D2ee523a2206206994597C13D831ec7&address=0xA000000000000000000000000000000000000001&page=1&offset=200&sort=desc&apikey=REDACTED": {
+    "status": "1",
+    "message": "OK",
+    "result": [
+      {
+        "blockNumber": "20172800",
+        "timeStamp": "1793404800",
+        "hash": "0xf001",
+        "nonce": "1",
+        "blockHash": "0xabc",
+        "from": "0x1111111111111111111111111111111111111111",
+        "contractAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "to": "0xA000000000000000000000000000000000000001",
+        "value": "1000000000",
+        "tokenName": "Tether USD",
+        "tokenSymbol": "USDT",
+        "tokenDecimal": "6",
+        "transactionIndex": "1",
+        "gas": "1",
+        "gasPrice": "1",
+        "gasUsed": "1",
+        "cumulativeGasUsed": "1",
+        "input": "deprecated",
+        "confirmations": "100"
+      },
+      {
+        "blockNumber": "20432000",
+        "timeStamp": "1793145600",
+        "hash": "0xf002",
+        "nonce": "1",
+        "blockHash": "0xabc",
+        "from": "0xA000000000000000000000000000000000000001",
+        "contractAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "to": "0x2222222222222222222222222222222222222222",
+        "value": "400000000",
+        "tokenName": "Tether USD",
+        "tokenSymbol": "USDT",
+        "tokenDecimal": "6",
+        "transactionIndex": "1",
+        "gas": "1",
+        "gasPrice": "1",
+        "gasUsed": "1",
+        "cumulativeGasUsed": "1",
+        "input": "deprecated",
+        "confirmations": "100"
+      },
+      {
+        "blockNumber": "22592000",
+        "timeStamp": "1790985600",
+        "hash": "0xf003",
+        "nonce": "1",
+        "blockHash": "0xabc",
+        "from": "0x2222222222222222222222222222222222222222",
+        "contractAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "to": "0xA000000000000000000000000000000000000001",
+        "value": "250500000",
+        "tokenName": "Tether USD",
+        "tokenSymbol": "USDT",
+        "tokenDecimal": "6",
+        "transactionIndex": "1",
+        "gas": "1",
+        "gasPrice": "1",
+        "gasUsed": "1",
+        "cumulativeGasUsed": "1",
+        "input": "deprecated",
+        "confirmations": "100"
+      },
+      {
+        "blockNumber": "30368000",
+        "timeStamp": "1783209600",
+        "hash": "0xf004",
+        "nonce": "1",
+        "blockHash": "0xabc",
+        "from": "0x3333333333333333333333333333333333333333",
+        "contractAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "to": "0xA000000000000000000000000000000000000001",
+        "value": "99000000",
+        "tokenName": "Tether USD",
+        "tokenSymbol": "USDT",
+        "tokenDecimal": "6",
+        "transactionIndex": "1",
+        "gas": "1",
+        "gasPrice": "1",
+        "gasUsed": "1",
+        "cumulativeGasUsed": "1",
+        "input": "deprecated",
+        "confirmations": "100"
+      }
+    ]
+  },
+  "url:https://api.etherscan.io/v2/api?chainid=8453&module=account&action=tokentx&contractaddress=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&address=0xB000000000000000000000000000000000000002&page=1&offset=200&sort=desc&apikey=REDACTED": {
+    "status": "0",
+    "message": "NOTOK",
+    "result": "Max rate limit reached"
+  },
+  "url:https://base.blockscout.com/api/v2/addresses/0xB000000000000000000000000000000000000002/token-transfers?type=ERC-20&filter=to&token=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913": {
+    "items": [
+      {
+        "transaction_hash": "0xb001",
+        "timestamp": "2026-11-01T00:00:00.000Z",
+        "block_number": 30000000,
+        "type": "token_transfer",
+        "method": "transfer",
+        "from": {
+          "hash": "0x1111111111111111111111111111111111111111",
+          "is_contract": false
+        },
+        "to": {
+          "hash": "0xB000000000000000000000000000000000000002",
+          "is_contract": false
+        },
+        "token": {
+          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "decimals": "6",
+          "symbol": "USDC",
+          "type": "ERC-20"
+        },
+        "total": {
+          "value": "75000000",
+          "decimals": "6"
+        }
+      }
+    ],
+    "next_page_params": null
+  },
+  "url:https://api.etherscan.io/v2/api?chainid=1&module=account&action=tokentx&contractaddress=0xdAC17F958D2ee523a2206206994597C13D831ec7&address=0xE000000000000000000000000000000000000005&page=1&offset=200&sort=desc&apikey=REDACTED": {
+    "status": "0",
+    "message": "No transactions found",
+    "result": []
+  },
+  "url:https://arbitrum.blockscout.com/api/v2/addresses/0xC000000000000000000000000000000000000003/token-transfers?type=ERC-20&filter=to&token=0xaf88d065e77c8cC2239327C5EDb3A432268e5831": {
+    "items": [
+      {
+        "transaction_hash": "0xa001",
+        "timestamp": "2026-10-30T00:00:00.000Z",
+        "block_number": 300000100,
+        "type": "token_transfer",
+        "method": "transfer",
+        "from": {
+          "hash": "0x1111111111111111111111111111111111111111",
+          "is_contract": false
+        },
+        "to": {
+          "hash": "0xC000000000000000000000000000000000000003",
+          "is_contract": false
+        },
+        "token": {
+          "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "decimals": "6",
+          "symbol": "USDC",
+          "type": "ERC-20"
+        },
+        "total": {
+          "value": "10000000",
+          "decimals": "6"
+        }
+      },
+      {
+        "transaction_hash": "0xa002",
+        "timestamp": "2026-10-23T00:00:00.000Z",
+        "block_number": 300000050,
+        "type": "token_transfer",
+        "method": "transfer",
+        "from": {
+          "hash": "0x2222222222222222222222222222222222222222",
+          "is_contract": false
+        },
+        "to": {
+          "hash": "0xC000000000000000000000000000000000000003",
+          "is_contract": false
+        },
+        "token": {
+          "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "decimals": "6",
+          "symbol": "USDC",
+          "type": "ERC-20"
+        },
+        "total": {
+          "value": "20000000",
+          "decimals": "6"
+        }
+      }
+    ],
+    "next_page_params": {
+      "block_number": 300000050,
+      "index": 7,
+      "items_count": 50
+    }
+  },
+  "url:https://arbitrum.blockscout.com/api/v2/addresses/0xC000000000000000000000000000000000000003/token-transfers?type=ERC-20&filter=to&token=0xaf88d065e77c8cC2239327C5EDb3A432268e5831&block_number=300000050&index=7&items_count=50": {
+    "items": [
+      {
+        "transaction_hash": "0xa003",
+        "timestamp": "2026-09-23T00:00:00.000Z",
+        "block_number": 299000000,
+        "type": "token_transfer",
+        "method": "transfer",
+        "from": {
+          "hash": "0x3333333333333333333333333333333333333333",
+          "is_contract": false
+        },
+        "to": {
+          "hash": "0xC000000000000000000000000000000000000003",
+          "is_contract": false
+        },
+        "token": {
+          "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "decimals": "6",
+          "symbol": "USDC",
+          "type": "ERC-20"
+        },
+        "total": {
+          "value": "30000000",
+          "decimals": "6"
+        }
+      }
+    ],
+    "next_page_params": null
+  },
+  "url:https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api?chainid=43114&module=account&action=tokentx&contractaddress=0x9702230A8Ea53601f5Cd2dc00fDbc13d4dF4A8c7&address=0xD000000000000000000000000000000000000004&page=1&offset=200&sort=desc": {
+    "status": "1",
+    "message": "OK",
+    "result": [
+      {
+        "blockNumber": "20604800",
+        "timeStamp": "1792972800",
+        "hash": "0xd001",
+        "nonce": "1",
+        "blockHash": "0xabc",
+        "from": "0x1111111111111111111111111111111111111111",
+        "contractAddress": "0x9702230A8Ea53601f5Cd2dc00fDbc13d4dF4A8c7",
+        "to": "0xD000000000000000000000000000000000000004",
+        "value": "5000000",
+        "tokenName": "Tether USD",
+        "tokenSymbol": "USDT",
+        "tokenDecimal": "6",
+        "transactionIndex": "1",
+        "gas": "1",
+        "gasPrice": "1",
+        "gasUsed": "1",
+        "cumulativeGasUsed": "1",
+        "input": "deprecated",
+        "confirmations": "100"
+      }
+    ]
+  },
+  "url:https://api.trongrid.io/v1/accounts/TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf/transactions/trc20?only_to=true&only_confirmed=true&limit=200&contract_address=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&min_timestamp=1785801600000&order_by=block_timestamp%2Cdesc": {
+    "data": [
+      {
+        "transaction_id": "t001",
+        "token_info": {
+          "symbol": "USDT",
+          "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "decimals": 6,
+          "name": "Tether USD"
+        },
+        "block_timestamp": 1793491200000,
+        "from": "TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9",
+        "to": "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf",
+        "type": "Transfer",
+        "value": "5000000000"
+      },
+      {
+        "transaction_id": "t002",
+        "token_info": {
+          "symbol": "USDT",
+          "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "decimals": 6,
+          "name": "Tether USD"
+        },
+        "block_timestamp": 1793404800000,
+        "from": "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf",
+        "to": "TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9",
+        "type": "Approval",
+        "value": "1"
+      },
+      {
+        "transaction_id": "t003",
+        "token_info": {
+          "symbol": "USDT",
+          "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "decimals": 6,
+          "name": "Tether USD"
+        },
+        "block_timestamp": 1791849600000,
+        "from": "TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7",
+        "to": "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf",
+        "type": "Transfer",
+        "value": "12345678"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "at": 1793577600000,
+      "page_size": 3
+    }
+  },
+  "url:https://api.helius.xyz/v0/addresses/9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin/transactions?api-key=REDACTED&limit=100&type=TRANSFER": [
+    {
+      "signature": "sig001",
+      "timestamp": 1793491200,
+      "slot": 300000001,
+      "type": "TRANSFER",
+      "tokenTransfers": [
+        {
+          "fromUserAccount": "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
+          "toUserAccount": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+          "fromTokenAccount": "x",
+          "toTokenAccount": "y",
+          "tokenAmount": 100.5,
+          "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "tokenStandard": "Fungible"
+        }
+      ]
+    },
+    {
+      "signature": "sig002",
+      "timestamp": 1793404800,
+      "slot": 300000000,
+      "type": "TRANSFER",
+      "tokenTransfers": [
+        {
+          "fromUserAccount": "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
+          "toUserAccount": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+          "fromTokenAccount": "x",
+          "toTokenAccount": "y",
+          "tokenAmount": 3,
+          "mint": "So11111111111111111111111111111111111111112",
+          "tokenStandard": "Fungible"
+        }
+      ]
+    },
+    {
+      "signature": "sig003",
+      "timestamp": 1793318400,
+      "slot": 299999999,
+      "type": "TRANSFER",
+      "tokenTransfers": [
+        {
+          "fromUserAccount": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+          "toUserAccount": "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
+          "fromTokenAccount": "y",
+          "toTokenAccount": "x",
+          "tokenAmount": 40,
+          "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "tokenStandard": "Fungible"
+        }
+      ]
+    }
+  ]
+}

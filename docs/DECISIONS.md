@@ -13,3 +13,7 @@ Format: date - decision - reason - status (default | confirmed by Punit)
 - 2026-11-01 - EVM reads via `viem` (multicall where available), Tron via TronGrid HTTP, Solana via JSON-RPC `getAccountInfo` on the ATA - sensible defaults, swap-able
 - 2026-11-01 - Monorepo: pnpm workspaces, TypeScript strict, tsup for packages, Vitest - per brief
 - 2026-11-01 - Risk score 0-100 higher is worse; bands CLEAR/LOW/CAUTION/HIGH/BLOCK - per brief
+- 2026-11-02 - Explorer order per EVM chain: Etherscan V2 when a key is set, then Blockscout hosted instance, then Routescan (Avalanche only). First provider that answers wins; errors from earlier providers are kept in the coverage detail - default
+- 2026-11-02 - Fixture keys redact `apikey`, `api-key`, `api_key` query values so `CR_RECORD=1` can never commit a provider key - constraint
+- 2026-11-02 - Solana transfers need a Helius key; a keyless path via `getSignaturesForAddress` + `getTransaction` was rejected for v1 (hundreds of RPC calls per screen on the public endpoint) - default, revisit if Helius free tier is withdrawn
+- 2026-11-02 - Explorer data is fetched on every screen but scores nothing yet: one `FLOW_INBOUND_WINDOW` info line and an `explorer` coverage line. Fund-flow stays `disabled` so confidence cannot reach high before the trace exists - constraint

@@ -7,6 +7,7 @@
   "scripts": {
     "screen": "pnpm --filter @cr/cli screen",
     "verify:sources": "pnpm --filter @cr/cli verify:sources",
+    "verify:explorers": "pnpm --filter @cr/cli verify:explorers",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

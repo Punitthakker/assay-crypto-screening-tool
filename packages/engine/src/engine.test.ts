@@ -9,7 +9,24 @@ let engine: Engine;
 beforeAll(() => {
   process.chdir(root);
   const transport = new FixtureTransport(path.join(root, "data/fixtures/recorded.json"));
-  engine = new Engine({ transport, labels: new LabelStore(path.join(root, "data/labels")) });
+  engine = new Engine({ transport, labels: new LabelStore(path.join(root, "data/labels")), env: {} });
+});
+
+describe("explorer coverage", () => {
+  it("reports the explorer as unavailable in fixture mode when nothing is recorded, without touching the score", async () => {
+    const r = await engine.screen({ address: "0x1111111111111111111111111111111111111111", chain: "base", asset: "USDC" });
+    const ex = r.coverage.find((c) => c.source === "explorer");
+    expect(ex?.status).toBe("unavailable");
+    expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("disabled");
+    expect(r.confidence).toBe("medium");
+  });
+
+  it("can be switched off", async () => {
+    const transport = new FixtureTransport(path.join(root, "data/fixtures/recorded.json"));
+    const e = new Engine({ transport, labels: new LabelStore(path.join(root, "data/labels")), explorer: false });
+    const r = await e.screen({ address: "0x1111111111111111111111111111111111111111", chain: "base", asset: "USDC" });
+    expect(r.coverage.find((c) => c.source === "explorer")).toBeUndefined();
+  });
 });
 
 describe("control cases (SCORING.md)", () => {
