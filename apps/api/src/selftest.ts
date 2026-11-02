@@ -61,8 +61,15 @@ export async function selfTest(transport: Transport) {
         verdict: r.report.verdict, score: r.report.score, ms: Date.now() - t0,
         explorer: r.report.coverage.find((c) => c.source === "explorer"),
         sources: r.sources.length, note: r.sourcesNote,
-        top: r.sources.slice(0, 5).map((x) => `${x.status} ${(x.share * 100).toFixed(1)}% ${x.total} ${x.count}tx ${x.address}${x.label ? ` ${x.label.name}` : ""}`),
+        top: r.sources.slice(0, 5).map((x) => `${x.status} ${(x.share * 100).toFixed(1)}% ${x.total} ${x.count}tx ${x.address}${x.label ? ` ${x.label.name}` : ""} tx=${x.txHashes[0] ?? "-"}`),
       });
+      // then follow one real inbound transfer as a tronscan tx link, receiver = the address above
+      const hash = r.sources[0]?.txHashes[0];
+      if (hash && r.chain === "tron") {
+        const t1 = Date.now();
+        const tx = await lookup.lookup({ input: `https://tronscan.org/#/transaction/${hash}`, receiver: r.address });
+        if (tx.kind === "tx") log("lookup tron.txLink", { hash, status: tx.tx.status, source: tx.tx.source, screened: tx.screened, verdict: tx.report?.verdict, hardBlock: tx.report?.hardBlock ?? null, sources: tx.sources.length, note: tx.sourcesNote, ms: Date.now() - t1 });
+      }
     } else {
       log("lookup tron.txLink", { status: r.tx.status, screened: r.screened, verdict: r.report?.verdict, sources: r.sources.length, note: r.sourcesNote, ms: Date.now() - t0 });
     }
