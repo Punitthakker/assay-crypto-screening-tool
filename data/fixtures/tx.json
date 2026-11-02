@@ -108,6 +108,80 @@
       "page_size": 4
     }
   },
+  "url:https://apilist.tronscanapi.com/api/transaction-info?hash=8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e": {
+    "hash": "8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e",
+    "timestamp": 1793568960000,
+    "block": 70000100,
+    "confirmed": true,
+    "contractRet": "SUCCESS",
+    "trc20TransferInfo": [
+      {
+        "icon_url": "",
+        "symbol": "USDT",
+        "level": "2",
+        "to_address": "T9yD14Nj9j7xAB4dbGeiX9h8unkfM3k1fd",
+        "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "type": "Transfer",
+        "decimals": 6,
+        "name": "Tether USD",
+        "vip": true,
+        "tokenType": "trc20",
+        "from_address": "T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K",
+        "amount_str": "750000000"
+      }
+    ]
+  },
+  "url:https://apilist.tronscanapi.com/api/transaction-info?hash=1111111111111111111111111111111111111111111111111111111111111111": {
+    "message": "some parameter error"
+  },
+  "url:https://apilist.tronscanapi.com/api/token_trc20/transfers?limit=50&start=0&contract_address=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&toAddress=T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K&start_timestamp=1785801600000&end_timestamp=1793577600000&confirm=true": {
+    "total": 2,
+    "rangeTotal": 2,
+    "token_transfers": [
+      {
+        "transaction_id": "ts1",
+        "status": 0,
+        "block_ts": 1793404800000,
+        "from_address": "TAUN6FwrnwwmaEqYcckffC7wYmbaS6cBiX",
+        "to_address": "T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K",
+        "block": 69000000,
+        "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "quant": "3000000000",
+        "confirmed": true,
+        "contractRet": "SUCCESS",
+        "finalResult": "SUCCESS",
+        "event_type": "Transfer",
+        "tokenInfo": {
+          "tokenId": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "tokenAbbr": "USDT",
+          "tokenName": "Tether USD",
+          "tokenDecimal": 6,
+          "tokenType": "trc20"
+        }
+      },
+      {
+        "transaction_id": "ts2",
+        "status": 0,
+        "block_ts": 1792281600000,
+        "from_address": "T9yD14Nj9j7xAB4dbGeiX9h8unkhH5vBqB",
+        "to_address": "T9yD14Nj9j7xAB4dbGeiX9h8unkdRAmp4K",
+        "block": 69000000,
+        "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "quant": "250000000",
+        "confirmed": true,
+        "contractRet": "SUCCESS",
+        "finalResult": "SUCCESS",
+        "event_type": "Transfer",
+        "tokenInfo": {
+          "tokenId": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+          "tokenAbbr": "USDT",
+          "tokenName": "Tether USD",
+          "tokenDecimal": 6,
+          "tokenType": "trc20"
+        }
+      }
+    ]
+  },
   "receipt:ethereum:0xe1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1": {
     "hash": "0xe1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1",
     "status": "success",

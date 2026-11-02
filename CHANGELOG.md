@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 - 2026-11-02
+- Tron made live-grade: Tronscan public API as the keyless fallback for TRC-20 inbound transfers and transaction lookup after the first Railway boot showed keyless TronGrid returning 429 on `/v1/` calls. Live transport retries 429 and 5xx twice with backoff. Boot self-test runs the hard-check controls with the explorer off and one real lookup on a tronscan address link so the deploy log shows the live path.
+- Found live, not yet fixed: Blockscout on Base answers 403 from Railway (bot protection); EVM sources need `ETHERSCAN_API_KEY`.
+
 ## 0.3.0 - 2026-11-02
 - Screen by transaction or explorer link (requested by Punit). One search box on /check accepts an address, a tx hash, a tronscan / etherscan-family / blockscout / solscan address link, or a tx link. `POST /v1/lookup` resolves it, screens the sender of that exact transfer (amount and token contract taken from the tx, so the fake-token hard block and the Travel Rule floor apply), confirms the tx pays the stated receiver, and lists the sender's sources: inbound counterparties over the 90-day window, aggregated by value, each checked against labels, OFAC and the issuer freeze list (top 10). Sources are informational; nothing moves the score until the 2-hop trace lands.
 - Tx resolution: EVM via the public RPC receipt (Transfer logs, no key), Tron via TronGrid events, Solana via RPC getTransaction token balance deltas. `Transport.evmGetTransactionReceipt` added with a fixture key.

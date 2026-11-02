@@ -139,15 +139,30 @@ export class LiveTransport implements Transport {
     }));
   }
 
+  /** 429 and 5xx are retried twice with a short backoff (Retry-After honoured, capped at 3s). Public explorers throttle hard. */
+  private async fetchRetry(url: string, init?: RequestInit): Promise<Response> {
+    let last: Response | undefined;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const r = await withTimeout(fetch(url, init), this.timeoutMs, `fetch ${url}`);
+      if (r.ok) return r;
+      last = r;
+      if (r.status !== 429 && r.status < 500) break;
+      if (attempt < 2) {
+        const ra = Number(r.headers.get("retry-after"));
+        const wait = Math.min(3000, Number.isFinite(ra) && ra > 0 ? ra * 1000 : 800 * (attempt + 1));
+        await new Promise((res) => setTimeout(res, wait));
+      }
+    }
+    throw new Error(`HTTP ${last!.status} for ${redactUrl(url)}`);
+  }
+
   async fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-    const r = await withTimeout(fetch(url, init), this.timeoutMs, `fetch ${url}`);
-    if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+    const r = await this.fetchRetry(url, init);
     return (await r.json()) as T;
   }
 
   async fetchText(url: string, init?: RequestInit): Promise<string> {
-    const r = await withTimeout(fetch(url, init), this.timeoutMs, `fetch ${url}`);
-    if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+    const r = await this.fetchRetry(url, init);
     return await r.text();
   }
 }

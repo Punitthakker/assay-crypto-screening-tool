@@ -135,6 +135,11 @@ describe("ExplorerRouter", () => {
     expect(r.candidates("arbitrum").map((a) => a.provider)).toEqual(["blockscout"]);
   });
 
+  it("tries TronGrid then Tronscan on Tron", () => {
+    const r = new ExplorerRouter(transport, {});
+    expect(r.candidates("tron").map((a) => a.provider)).toEqual(["trongrid", "tronscan"]);
+  });
+
   it("uses Routescan for Avalanche when nothing else is configured", async () => {
     const r = new ExplorerRouter(transport, {});
     expect(r.candidates("avalanche").map((a) => a.provider)).toEqual(["routescan"]);

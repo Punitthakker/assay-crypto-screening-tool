@@ -1,7 +1,7 @@
 /** Boot-time live self-test with stable controls. Logged, never fatal. */
 import { encodeFunctionData, decodeFunctionResult, parseAbi, type Hex } from "viem";
 import { OfacAdapter, SanctionsOracleAdapter, LabelStore, type Transport } from "@cr/datasources";
-import { Engine } from "@cr/engine";
+import { Engine, TxScreener } from "@cr/engine";
 
 const ABI = parseAbi(["function isBlackListed(address) view returns (bool)", "function symbol() view returns (string)"]);
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7" as Hex;
@@ -30,7 +30,8 @@ export async function selfTest(transport: Transport) {
   log("result", out);
   // end-to-end engine runs on the non-EVM paths
   try {
-    const engine = new Engine({ transport, labels: new LabelStore() });
+    // explorer off here: the hard-check controls must not spend explorer quota at every boot
+    const engine = new Engine({ transport, labels: new LabelStore(), explorer: false });
     const snap = await new OfacAdapter(transport).load();
     const cases: { name: string; req: Record<string, unknown> }[] = [
       { name: "tron.usdtContractItself", req: { address: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", chain: "tron", asset: "USDT" } },
@@ -49,4 +50,21 @@ export async function selfTest(transport: Transport) {
       } catch (e) { log(`e2e ${c.name}`, { error: e instanceof Error ? e.message : String(e) }); }
     }
   } catch (e) { log("e2e", { error: e instanceof Error ? e.message : String(e) }); }
+  // one live lookup through the explorer path: Tron USDT is the pilot's main case
+  try {
+    const labels = new LabelStore();
+    const lookup = new TxScreener(new Engine({ transport, labels }), transport, labels);
+    const t0 = Date.now();
+    const r = await lookup.lookup({ input: process.env.ASSAY_SELFTEST_LOOKUP ?? "https://tronscan.org/address/TPsMJ3BE9ixSQ7guFbVLZ4eou6SATBSqHH/transactions" });
+    if (r.kind === "address") {
+      log("lookup tron.addressLink", {
+        verdict: r.report.verdict, score: r.report.score, ms: Date.now() - t0,
+        explorer: r.report.coverage.find((c) => c.source === "explorer"),
+        sources: r.sources.length, note: r.sourcesNote,
+        top: r.sources.slice(0, 5).map((x) => `${x.status} ${(x.share * 100).toFixed(1)}% ${x.total} ${x.count}tx ${x.address}${x.label ? ` ${x.label.name}` : ""}`),
+      });
+    } else {
+      log("lookup tron.txLink", { status: r.tx.status, screened: r.screened, verdict: r.report?.verdict, sources: r.sources.length, note: r.sourcesNote, ms: Date.now() - t0 });
+    }
+  } catch (e) { log("lookup", { error: e instanceof Error ? e.message : String(e) }); }
 }

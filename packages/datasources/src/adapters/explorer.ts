@@ -394,6 +394,91 @@ export class TronGridExplorer implements ExplorerAdapter {
   }
 }
 
+/* ---------------------------------- Tronscan (fallback) ---------------------------------- */
+
+const TronscanTransfer = z.object({
+  transaction_id: z.string(),
+  block_ts: z.number(),
+  from_address: z.string(),
+  to_address: z.string(),
+  block: z.number().optional(),
+  contract_address: z.string(),
+  quant: z.string(),
+  confirmed: z.boolean().optional(),
+  contractRet: z.string().optional(),
+  finalResult: z.string().optional(),
+  event_type: z.string().optional(),
+  tokenInfo: z.object({ tokenDecimal: z.number().optional() }).passthrough().optional(),
+});
+const TronscanTransfers = z.object({
+  total: z.number().optional(),
+  rangeTotal: z.number().optional(),
+  token_transfers: z.array(TronscanTransfer).default([]),
+});
+
+export const TRONSCAN_API = "https://apilist.tronscanapi.com";
+
+/** Tronscan's public API, no key (TRONSCAN_API_KEY optional). Pages of 50, used when TronGrid throttles. */
+export class TronscanExplorer implements ExplorerAdapter {
+  readonly provider = "tronscan";
+  private key: string | undefined;
+  private base: string;
+  constructor(
+    private transport: Transport,
+    env: NodeJS.ProcessEnv = process.env,
+    private maxPages = 4,
+  ) {
+    this.key = env.TRONSCAN_API_KEY;
+    this.base = (env.TRONSCAN_API ?? TRONSCAN_API).replace(/\/$/, "");
+  }
+  supports(chain: ChainId): boolean {
+    return chain === "tron";
+  }
+  async inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    const startMs = window.nowMs - window.windowDays * DAY_MS;
+    const headers: Record<string, string> = { accept: "application/json" };
+    if (this.key) headers["TRON-PRO-API-KEY"] = this.key;
+    const rows: Transfer[] = [];
+    let reachedWindowEnd = false;
+    for (let page = 0; page < this.maxPages; page++) {
+      const q = new URLSearchParams({
+        limit: "50",
+        start: String(page * 50),
+        contract_address: token.address,
+        toAddress: address,
+        start_timestamp: String(startMs),
+        end_timestamp: String(window.nowMs),
+        confirm: "true",
+      });
+      const res = TronscanTransfers.parse(await this.transport.fetchJson(`${this.base}/api/token_trc20/transfers?${q.toString()}`, { headers }));
+      for (const r of res.token_transfers) {
+        if (r.event_type && r.event_type !== "Transfer") continue;
+        if ((r.finalResult ?? r.contractRet ?? "SUCCESS") !== "SUCCESS") continue;
+        const dec = r.tokenInfo?.tokenDecimal ?? token.decimals;
+        rows.push({
+          chain: "tron",
+          txHash: r.transaction_id,
+          from: r.from_address,
+          to: r.to_address,
+          token: r.contract_address,
+          valueBase: BigInt(r.quant).toString(),
+          decimals: dec,
+          value: unitsOf(BigInt(r.quant).toString(), dec),
+          timestamp: Math.floor(r.block_ts / 1000),
+          ...(r.block !== undefined ? { blockNumber: r.block } : {}),
+        });
+      }
+      const total = res.rangeTotal ?? res.total ?? 0;
+      if (res.token_transfers.length < 50 || (page + 1) * 50 >= total) {
+        reachedWindowEnd = true;
+        break;
+      }
+      if (rows.length >= window.maxTransfers) break;
+    }
+    return finalize(this.provider, rows, address, token, window, reachedWindowEnd);
+  }
+}
+
 /* ---------------------------------- Helius (Solana) ---------------------------------- */
 
 const HeliusTokenTransfer = z.object({
@@ -478,7 +563,7 @@ const SOURCE = "explorer";
 /**
  * Picks providers per chain in order and falls through on failure.
  * EVM: Etherscan V2 when a key is set, then Blockscout, then Routescan (Avalanche).
- * Tron: TronGrid. Solana: Helius when a key is set.
+ * Tron: TronGrid, then Tronscan's public API. Solana: Helius when a key is set.
  */
 export class ExplorerRouter {
   private adapters: ExplorerAdapter[];
@@ -493,6 +578,7 @@ export class ExplorerRouter {
       new BlockscoutExplorer(transport, env),
       routescanAvalanche(transport),
       new TronGridExplorer(transport, env),
+      new TronscanExplorer(transport, env),
       new HeliusExplorer(transport, env),
     ];
   }

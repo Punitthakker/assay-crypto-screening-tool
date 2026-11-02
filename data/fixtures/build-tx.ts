@@ -25,6 +25,7 @@ export const T = {
   frozen: tronAddr(0xd4),
   hash: "9f".repeat(32),
   hashNotFound: "00".repeat(32),
+  hashScan: "8e".repeat(32),
 };
 export const E = {
   sender: "0x00000000000000000000000000000000000000a1",
@@ -65,6 +66,18 @@ f[tronKey(T.frozen)] = ONE;
     success: true,
     meta: { at: NOW_MS, page_size: 4 },
   };
+}
+
+// ---- Tronscan fallback: a tx TronGrid cannot serve (no fixture = throttled), answered by transaction-info ----
+f[`url:https://apilist.tronscanapi.com/api/transaction-info?hash=${T.hashScan}`] = {
+  hash: T.hashScan, timestamp: ago(0.1) * 1000, block: 70_000_100, confirmed: true, contractRet: "SUCCESS",
+  trc20TransferInfo: [{ icon_url: "", symbol: "USDT", level: "2", to_address: T.receiver, contract_address: USDT_TRON, type: "Transfer", decimals: 6, name: "Tether USD", vip: true, tokenType: "trc20", from_address: T.sender, amount_str: "750000000" }],
+};
+f[`url:https://apilist.tronscanapi.com/api/transaction-info?hash=${"11".repeat(32)}`] = { message: "some parameter error" };
+{
+  const q = new URLSearchParams({ limit: "50", start: "0", contract_address: USDT_TRON, toAddress: T.sender, start_timestamp: String(NOW_MS - 90 * DAY * 1000), end_timestamp: String(NOW_MS), confirm: "true" });
+  const row = (id: string, d: number, from: string, quant: string) => ({ transaction_id: id, status: 0, block_ts: ago(d) * 1000, from_address: from, to_address: T.sender, block: 69_000_000, contract_address: USDT_TRON, quant, confirmed: true, contractRet: "SUCCESS", finalResult: "SUCCESS", event_type: "Transfer", tokenInfo: { tokenId: USDT_TRON, tokenAbbr: "USDT", tokenName: "Tether USD", tokenDecimal: 6, tokenType: "trc20" } });
+  f[`url:https://apilist.tronscanapi.com/api/token_trc20/transfers?${q.toString()}`] = { total: 2, rangeTotal: 2, token_transfers: [row("ts1", 2, T.binance, "3000000000"), row("ts2", 15, T.plain, "250000000")] };
 }
 
 // ---- Ethereum: 12,000 USDT from sender to receiver, plus a look-alike token in the same tx ----

@@ -185,6 +185,26 @@ const TronEvent = z.object({
 });
 const TronEvents = z.object({ data: z.array(TronEvent).default([]), success: z.boolean().optional(), error: z.string().optional() });
 
+/* Tronscan transaction-info (fallback when TronGrid throttles) */
+const TronscanTrc20 = z.object({
+  from_address: z.string(),
+  to_address: z.string(),
+  contract_address: z.string(),
+  amount_str: z.string(),
+  decimals: z.number().optional(),
+  type: z.string().optional(),
+});
+const TronscanTxInfo = z
+  .object({
+    hash: z.string().optional(),
+    timestamp: z.number().optional(),
+    block: z.number().optional(),
+    confirmed: z.boolean().optional(),
+    contractRet: z.string().optional(),
+    trc20TransferInfo: z.array(TronscanTrc20).optional(),
+  })
+  .passthrough();
+
 /* Solana getTransaction (jsonParsed) */
 const SolBalance = z.object({
   accountIndex: z.number(),
@@ -260,6 +280,59 @@ export class TxResolver {
   }
 
   private async tron(hash: string): Promise<ResolvedTx> {
+    try {
+      return await this.tronGrid(hash);
+    } catch (e) {
+      const first = e instanceof Error ? e.message : String(e);
+      try {
+        return await this.tronscan(hash);
+      } catch (e2) {
+        throw new Error(`trongrid: ${first}; tronscan: ${e2 instanceof Error ? e2.message : String(e2)}`);
+      }
+    }
+  }
+
+  private async tronscan(hash: string): Promise<ResolvedTx> {
+    const base = (this.env.TRONSCAN_API ?? "https://apilist.tronscanapi.com").replace(/\/$/, "");
+    const headers: Record<string, string> = { accept: "application/json" };
+    if (this.env.TRONSCAN_API_KEY) headers["TRON-PRO-API-KEY"] = this.env.TRONSCAN_API_KEY;
+    const explorerUrl = explorerTxUrl("tron", hash);
+    const res = TronscanTxInfo.parse(await this.transport.fetchJson(`${base}/api/transaction-info?hash=${hash}`, { headers }));
+    if (!res.hash) return { chain: "tron", hash, status: "not_found", transfers: [], explorerUrl, source: "tronscan" };
+    const timestamp = res.timestamp !== undefined ? Math.floor(res.timestamp / 1000) : undefined;
+    const transfers: Transfer[] = [];
+    for (const t of res.trc20TransferInfo ?? []) {
+      if (t.type && t.type !== "Transfer") continue;
+      const tok = tokenByAddress("tron", t.contract_address);
+      const decimals = t.decimals ?? tok?.decimals ?? 6;
+      const valueBase = BigInt(t.amount_str).toString();
+      transfers.push({
+        chain: "tron",
+        txHash: hash,
+        from: t.from_address.startsWith("T") ? t.from_address : tronHexToBase58(t.from_address),
+        to: t.to_address.startsWith("T") ? t.to_address : tronHexToBase58(t.to_address),
+        token: t.contract_address,
+        valueBase,
+        decimals,
+        value: units(valueBase, decimals),
+        timestamp: timestamp ?? 0,
+        ...(res.block !== undefined ? { blockNumber: res.block } : {}),
+      });
+    }
+    const ok = (res.contractRet ?? "SUCCESS") === "SUCCESS" && res.confirmed !== false;
+    return {
+      chain: "tron",
+      hash,
+      status: ok ? "confirmed" : "failed",
+      ...(res.block !== undefined ? { blockNumber: res.block } : {}),
+      ...(timestamp !== undefined ? { timestamp } : {}),
+      transfers,
+      explorerUrl,
+      source: "tronscan",
+    };
+  }
+
+  private async tronGrid(hash: string): Promise<ResolvedTx> {
     const base = (rpcsFor(getChain("tron"), this.env)[0] ?? "https://api.trongrid.io").replace(/\/$/, "");
     const headers: Record<string, string> = { accept: "application/json" };
     if (this.env.TRONGRID_API_KEY) headers["TRON-PRO-API-KEY"] = this.env.TRONGRID_API_KEY;

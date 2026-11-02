@@ -2,7 +2,8 @@ import { describe, expect, it, beforeAll } from "vitest";
 import path from "node:path";
 import { Engine } from "./screen.js";
 import { TxScreener } from "./screen-tx.js";
-import { FixtureTransport, LabelStore, TxResolver, classifyInput, looksLikeTx, parseAddressInput, parseTxInput } from "@cr/datasources";
+import { FixtureTransport, LabelStore, TronscanExplorer, TxResolver, classifyInput, defaultWindow, looksLikeTx, parseAddressInput, parseTxInput } from "@cr/datasources";
+import { canonicalToken } from "@cr/shared";
 
 // mirrors data/fixtures/build-tx.ts
 const NOW_MS = Date.UTC(2026, 10, 2, 0, 0, 0);
@@ -14,6 +15,7 @@ const T = {
   frozen: "T9yD14Nj9j7xAB4dbGeiX9h8unkjBq477c",
   hash: "9f".repeat(32),
   hashNotFound: "00".repeat(32),
+  hashScan: "8e".repeat(32),
 };
 const E = {
   sender: "0x00000000000000000000000000000000000000a1",
@@ -185,5 +187,28 @@ describe("address links and the unified lookup", () => {
 
   it("lookup refuses a bare EVM address without a chain", async () => {
     await expect(screener.lookup({ input: E.sender })).rejects.toThrow(/pick the chain/);
+  });
+});
+
+describe("Tronscan fallback", () => {
+  it("resolves a tx from transaction-info when TronGrid cannot serve it", async () => {
+    const r = await new TxResolver(transport, {}).resolve(parseTxInput(T.hashScan));
+    expect(r.source).toBe("tronscan");
+    expect(r.status).toBe("confirmed");
+    expect(r.transfers[0]).toMatchObject({ from: T.sender, to: T.receiver, value: 750 });
+  });
+
+  it("reports not_found when tronscan has no hash either", async () => {
+    const r = await new TxResolver(transport, {}).resolve(parseTxInput("11".repeat(32)));
+    expect(r.status).toBe("not_found");
+    expect(r.source).toBe("tronscan");
+  });
+
+  it("reads inbound TRC-20 transfers from tronscan's public API", async () => {
+    const ts = new TronscanExplorer(transport, {});
+    const page = await ts.inboundTransfers(T.sender, canonicalToken("tron", "USDT")!, defaultWindow({ nowMs: NOW_MS }));
+    expect(page.provider).toBe("tronscan");
+    expect(page.transfers.map((t) => [t.from, t.value])).toEqual([[T.binance, 3000], [T.plain, 250]]);
+    expect(page.truncated).toBe(false);
   });
 });
