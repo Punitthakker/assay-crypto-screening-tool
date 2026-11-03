@@ -15,13 +15,15 @@ import {
   type Transport,
 } from "@cr/datasources";
 import type { Engine } from "./screen.js";
+import type { TraceNode, TraceResult } from "./trace.js";
 
 /**
  * Screen by transaction: paste the hash or explorer link of the transfer you are
  * about to accept. Assay resolves it, screens the sender of that exact transfer,
  * and lists where the sender's own inbound funds came from over the trace window,
  * with the hard checks (label, OFAC, issuer freeze) run on each source.
- * Sources are informational until the scored 2-hop trace lands; nothing here changes the score.
+ * The 2-hop trace scores them (EXPOSURE_* in the report); the source list reuses the trace's
+ * hop-1 classification so no check runs twice, and the trace graph rides along as `trace`.
  */
 
 export const ScreenTxRequestSchema = z
@@ -59,6 +61,7 @@ export interface TxReport {
   report?: Report;
   sources: Source[];
   sourcesNote: string;
+  trace?: TraceSummary;
   /** every token the tx moved that is not a registry USDT/USDC, for the fake-token warning */
   otherTokens: { token: string; value: number; from: string; to: string }[];
 }
@@ -84,6 +87,24 @@ export interface AddressReport {
   report: Report;
   sources: Source[];
   sourcesNote: string;
+  trace?: TraceSummary;
+}
+
+/** The trace graph without the engine internals: enough to draw it and link every node to an explorer. */
+export interface TraceSummary {
+  depthRequested: number;
+  depthReached: number;
+  exposure: TraceResult["exposure"];
+  untraced: number;
+  boundary: number;
+  dusted: number;
+  inboundTotal: number;
+  nodes: TraceNode[];
+}
+
+export function summarizeTrace(t: TraceResult | undefined): TraceSummary | undefined {
+  if (!t) return undefined;
+  return { depthRequested: t.depthRequested, depthReached: t.depthReached, exposure: t.exposure, untraced: t.untraced, boundary: t.boundary, dusted: t.dusted, inboundTotal: t.inboundTotal, nodes: t.nodes };
 }
 
 export type LookupReport = AddressReport | ({ kind: "tx" } & TxReport);
@@ -119,8 +140,9 @@ export class TxScreener {
     const chain = c.chain ?? req.chain;
     if (!chain) throw new Error("pick the chain for an EVM address, or paste the explorer link");
     const asset = req.asset ?? "USDT";
-    const { report, transfers, token } = await this.engine.screenWithFlow({ address: c.address, chain, asset, ...(req.amount !== undefined ? { amount: req.amount } : {}) });
-    const sources = token ? await this.sources(c.address, token, transfers) : [];
+    const { report, transfers, token, trace } = await this.engine.screenWithFlow({ address: c.address, chain, asset, ...(req.amount !== undefined ? { amount: req.amount } : {}) });
+    const sources = token ? await this.sources(c.address, token, transfers, trace) : [];
+    const ts = summarizeTrace(trace);
     return {
       kind: "address",
       address: c.address,
@@ -130,6 +152,7 @@ export class TxScreener {
       report,
       sources,
       sourcesNote: this.note(report, sources, transfers),
+      ...(ts ? { trace: ts } : {}),
     };
   }
 
@@ -139,7 +162,7 @@ export class TxScreener {
       ? `sender's inbound history unavailable: ${flowCov.detail ?? "no explorer"}`
       : sources.length === 0
         ? "no inbound transfers of this token to the sender in the window"
-        : `${sources.length} source${sources.length === 1 ? "" : "s"} over ${transfers.length} inbound transfer${transfers.length === 1 ? "" : "s"}; label, OFAC and issuer freeze checked on the top ${Math.min(sources.length, SOURCE_CHECK_CAP)} by value; informational until the scored trace lands`;
+        : `${sources.length} source${sources.length === 1 ? "" : "s"} over ${transfers.length} inbound transfer${transfers.length === 1 ? "" : "s"}; label, OFAC and issuer freeze checked on the top ${Math.min(sources.length, SOURCE_CHECK_CAP)} by value; ${report.coverage.find((c) => c.source === "fund-flow")?.status === "ok" || report.coverage.find((c) => c.source === "fund-flow")?.status === "partial" ? "scored by the backward trace (EXPOSURE_* lines in the report)" : "not scored: trace did not run"}`;
   }
 
   async screen(input: unknown): Promise<TxReport> {
@@ -168,15 +191,16 @@ export class TxScreener {
     const def = tokenByAddress(chain, t.token)!;
     const paysReceiver = req.receiver ? normalizeAddress(t.to, fam) === normalizeAddress(req.receiver, fam) : null;
 
-    const { report, transfers } = await this.engine.screenWithFlow({
+    const { report, transfers, trace } = await this.engine.screenWithFlow({
       address: t.from,
       chain,
       asset: def.symbol,
       amount: t.value,
       tokenContract: t.token,
     });
-    const sources = await this.sources(t.from, def, transfers);
+    const sources = await this.sources(t.from, def, transfers, trace);
     const sourcesNote = this.note(report, sources, transfers);
+    const ts = summarizeTrace(trace);
 
     return {
       tx,
@@ -184,13 +208,16 @@ export class TxScreener {
       report,
       sources,
       sourcesNote,
+      ...(ts ? { trace: ts } : {}),
       otherTokens,
     };
   }
 
-  /** Aggregate inbound transfers by counterparty and run the cheap hard checks on the top N. */
-  async sources(sender: string, token: TokenDef, transfers: Transfer[]): Promise<Source[]> {
+  /** Aggregate inbound transfers by counterparty and run the cheap hard checks on the top N, reusing the trace's hop-1 answers when it ran. */
+  async sources(sender: string, token: TokenDef, transfers: Transfer[], trace?: TraceResult): Promise<Source[]> {
     const fam = getChain(token.chain).family;
+    const traced = new Map<string, TraceNode>();
+    for (const n of trace?.nodes ?? []) if (n.hop === 1) traced.set(normalizeAddress(n.address, fam), n);
     const agg = new Map<string, { address: string; total: number; count: number; first: number; last: number; hashes: string[] }>();
     let grand = 0;
     for (const t of transfers) {
@@ -219,7 +246,12 @@ export class TxScreener {
       const checked = i < SOURCE_CHECK_CAP;
       let sanctioned: boolean | null = null;
       let frozen: boolean | null = null;
-      if (checked) {
+      const node = traced.get(normalizeAddress(r.address, fam));
+      if (node) {
+        sanctioned = node.sanctioned;
+        frozen = node.frozen;
+        if (label?.category === "sanctioned") sanctioned = true;
+      } else if (checked) {
         sanctioned = ofacSet ? ofacSet.has(normalizeAddress(r.address, fam)) : null;
         if (label?.category === "sanctioned") sanctioned = true;
         const fr = await this.freeze.screen(r.address, token);

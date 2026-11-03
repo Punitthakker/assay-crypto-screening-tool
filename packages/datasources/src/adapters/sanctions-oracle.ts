@@ -17,7 +17,7 @@ export class SanctionsOracleAdapter {
       return { facts: { sanctioned: null }, evidence: [], coverage: { source: SOURCE, status: "not_applicable", detail: `no oracle on ${chain}` } };
     }
     try {
-      const data = encodeFunctionData({ abi: ABI, functionName: "isSanctioned", args: [address as Hex] });
+      const data = encodeFunctionData({ abi: ABI, functionName: "isSanctioned", args: [address.toLowerCase() as Hex] });
       const raw = await this.transport.evmCall(chain, def.sanctionsOracle, data);
       const hit = decodeFunctionResult({ abi: ABI, functionName: "isSanctioned", data: raw }) as boolean;
       return {

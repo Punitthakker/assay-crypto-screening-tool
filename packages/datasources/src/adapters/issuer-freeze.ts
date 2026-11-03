@@ -57,7 +57,7 @@ export class IssuerFreezeAdapter {
             coverage: { ...base, status: "partial", detail: "freeze view function unconfirmed (USDT0)" },
           };
         case "evm": {
-          const data = encodeFunctionData({ abi: ABI, functionName: token.freeze.fn, args: [address as Hex] });
+          const data = encodeFunctionData({ abi: ABI, functionName: token.freeze.fn, args: [address.toLowerCase() as Hex] });
           const raw = await this.transport.evmCall(token.chain, token.address as Hex, data);
           const frozen = decodeFunctionResult({ abi: ABI, functionName: token.freeze.fn, data: raw }) as boolean;
           return this.result(frozen, token, `${token.freeze.fn}(${address}) on ${token.address}`, checkedAt);

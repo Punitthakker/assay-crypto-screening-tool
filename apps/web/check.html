@@ -95,7 +95,7 @@ footer{margin-top:56px;padding:28px 0 40px;border-top:1px solid var(--line);colo
   <div class="err" id="err"></div>
   <div id="out"><div class="term" id="term"></div><details><summary>raw report json</summary><pre id="raw"></pre></details></div>
 
-  <footer>Assay is a screening support tool. Not legal advice and not a substitute for a regulated entity's own AML/CFT programme. CLEAR means not frozen and not sanctioned at the time of the check. The sources list is informational: each source is checked against labels, OFAC and the issuer freeze list, but exposure is not yet scored. Feedback: Telegram @punitfintech · pt@moneybee.world · Powered by MoneyBee</footer>
+  <footer>Assay is a screening support tool. Not legal advice and not a substitute for a regulated entity's own AML/CFT programme. CLEAR means not frozen and not sanctioned at the time of the check. Sources are traced two hops back and scored as exposure (value-weighted, hop-decayed); licensed exchange wallets end the trace. Feedback: Telegram @punitfintech · pt@moneybee.world · Powered by MoneyBee</footer>
 </main>
 
 <script>
@@ -146,7 +146,7 @@ function renderLookup(j) {
     head.push(`<span class="d">address  </span>${link(j.explorerUrl, j.address)}  <span class="d">${esc(j.chain)}</span>`);
     head.push("");
   }
-  render(j.report, head, j.sources, j.sourcesNote, j.ms);
+  render(j.report, head, j.sources, j.sourcesNote, j.ms, j.trace);
   $("#raw").textContent = JSON.stringify(j, null, 2);
 }
 function renderSources(sources, note) {
@@ -164,7 +164,20 @@ function renderSources(sources, note) {
   lines.push(`<span class="d">         </span>${esc(note)}`);
   return lines;
 }
-function render(r, head = [], sources, note, ms) {
+function renderTrace(t) {
+  const lines = [""];
+  const pct = x => (x * 100).toFixed(1) + "%";
+  lines.push(`<span class="d">trace    </span>${t.depthReached} of ${t.depthRequested} hops  untraced ${pct(t.untraced)}  licensed boundary ${pct(t.boundary)}${t.dusted ? `  dust ${pct(t.dusted)}` : ""}`);
+  const hop2 = t.nodes.filter(n => n.hop === 2);
+  const col = n => n.status === "sanctioned" || n.status === "frozen" || n.status === "mixer" || n.status === "scam" || n.status === "darknet" ? "r" : n.status === "gambling" || n.status === "unlicensed_vasp" || n.status === "bridge_in" ? "a" : n.status === "licensed_vasp" ? "g" : "d";
+  for (const n of hop2.filter(n => n.status !== "unlabelled" && n.status !== "internal").slice(0, 25)) {
+    lines.push(`<span class="${col(n)}">${n.status.toUpperCase().padEnd(14)}</span> hop 2  ${pct(n.weight).padStart(6)} of value  ${esc(short(n.address))}${n.label ? ` ${esc(n.label.name)}` : ""}  <span class="d">paid ${esc(short(n.paid))}${n.txHashes[0] ? `  tx ${esc(short(n.txHashes[0]))}` : ""}</span>`);
+  }
+  const quiet = hop2.filter(n => n.status === "unlabelled").length;
+  if (quiet) lines.push(`<span class="d">         </span>${quiet} unlabelled hop-2 counterpart${quiet === 1 ? "y" : "ies"} with no finding; full graph in the raw json`);
+  return lines;
+}
+function render(r, head = [], sources, note, ms, trace) {
   const col = r.verdict === "BLOCK" ? "var(--red)" : r.verdict === "CAUTION" || r.verdict === "HIGH" ? "var(--amber)" : "var(--acid)";
   const lines = [...head];
   lines.push(`<span class="verdict ${r.verdict}">${r.verdict}</span>  risk <span class="meter"><i style="width:${r.score}%;background:${col}"></i></span>${String(r.score).padStart(3, "0")}/100  confidence ${r.confidence}${r.hardBlock ? `  <span class="r">${r.hardBlock}</span>` : ""}`);
@@ -177,6 +190,7 @@ function render(r, head = [], sources, note, ms) {
   if (r.flags && r.flags.length) lines.push(`<span class="d">flags    </span>${esc(r.flags.join(" | "))}`);
   lines.push(`<span class="d">sha256   </span>${esc(r.reportHash)}  <span class="d">${esc(r.checkedAt)}  ${ms ?? r.ms ?? ""}ms</span>`);
   if (sources) lines.push(...renderSources(sources, note));
+  if (trace && trace.nodes && trace.nodes.length) lines.push(...renderTrace(trace));
   $("#term").innerHTML = lines.join("\n");
   if (!sources) $("#raw").textContent = JSON.stringify(r, null, 2);
   $("#out").style.display = "block";

@@ -63,7 +63,8 @@ export class OfacAdapter {
     for (const t of def.ofacTickers) {
       for (const a of snap.lists[t] ?? []) set.add(normalizeAddress(a, def.family));
     }
-    const ageHours = (Date.now() - Date.parse(snap.fetchedAt)) / 36e5;
+    // a recorded snapshot is a fixture, not a stale list: its age must not move confidence in tests
+    const ageHours = this.transport.mode === "fixture" ? 0 : (Date.now() - Date.parse(snap.fetchedAt)) / 36e5;
     return { set, ageHours, tickers: def.ofacTickers.filter((t) => snap.lists[t]) };
   }
 

@@ -5,8 +5,10 @@ import {
   canonicalToken,
   detectFamily,
   getChain,
+  normalizeAddress,
   tokenByAddress,
   tokensFor,
+  type ChainId,
   type Coverage,
   type Evidence,
   type Report,
@@ -26,6 +28,7 @@ import {
   type Transport,
 } from "@cr/datasources";
 import { SCORING_VERSION, computeConfidence, computeScore } from "./score.js";
+import { Tracer, traceOptionsFromEnv, type TraceDeps, type TraceOptions, type TraceResult } from "./trace.js";
 
 export interface EngineOptions {
   transport: Transport;
@@ -37,6 +40,8 @@ export interface EngineOptions {
   explorer?: ExplorerRouter | false;
   /** trace window; defaults to 90 days or 200 transfers. nowMs pins the clock for fixtures. */
   window?: { windowDays?: number; maxTransfers?: number; nowMs?: number };
+  /** backward trace settings; defaults from env (CR_TRACE_DEPTH, CR_TRACE_FANOUT, CR_TRACE_DUST, CR_TRACE_FREEZE_CAP, CR_TRACE_EXPAND_CAP) */
+  trace?: Partial<TraceOptions>;
 }
 
 export class Engine {
@@ -46,6 +51,7 @@ export class Engine {
   private labels: LabelStore;
   private threshold: number;
   private explorer: ExplorerRouter | undefined;
+  private traceOpts: TraceOptions;
 
   constructor(private opts: EngineOptions) {
     this.ofac = new OfacAdapter(opts.transport);
@@ -54,6 +60,26 @@ export class Engine {
     this.labels = opts.labels ?? new LabelStore();
     this.threshold = opts.travelRuleThresholdUsd ?? Number(opts.env?.CR_TRAVEL_RULE_THRESHOLD_USD ?? 953);
     this.explorer = opts.explorer === false ? undefined : (opts.explorer ?? new ExplorerRouter(opts.transport, opts.env ?? process.env));
+    this.traceOpts = traceOptionsFromEnv(opts.env ?? process.env, opts.trace ?? {});
+  }
+
+  /** Real adapters behind the tracer: explorer for hop 2, labels, the OFAC set, issuer freeze reads. */
+  private traceDeps(chain: ChainId): TraceDeps {
+    const fam = getChain(chain).family;
+    let ofacSet: Promise<Set<string> | null> | undefined;
+    return {
+      inbound: (address, token, window) => this.explorer!.inboundTransfers(address, token, window),
+      label: (address) => this.labels.lookup(address, chain),
+      sanctioned: async (address) => {
+        ofacSet ??= this.ofac.setFor(chain).then((r) => r.set).catch(() => null);
+        const set = await ofacSet;
+        return set ? set.has(normalizeAddress(address, fam)) : null;
+      },
+      frozen: async (address, token) => {
+        const r = await this.freeze.screen(address, token);
+        return typeof r.facts?.frozen === "boolean" ? r.facts.frozen : null;
+      },
+    };
   }
 
   async screen(input: unknown): Promise<Report> {
@@ -61,7 +87,7 @@ export class Engine {
   }
 
   /** Same as screen() but also hands back the sender's inbound transfers for source listing. */
-  async screenWithFlow(input: unknown): Promise<{ report: Report; transfers: Transfer[]; token?: TokenDef }> {
+  async screenWithFlow(input: unknown): Promise<{ report: Report; transfers: Transfer[]; token?: TokenDef; trace?: TraceResult }> {
     const req: ScreenRequest = ScreenRequestSchema.parse(input);
     const chain = getChain(req.chain);
     const checkedAt = new Date().toISOString();
@@ -115,17 +141,32 @@ export class Engine {
     }
     coverage.push({ source: "labels", status: this.labels.size > 0 ? "ok" : "partial", detail: `${this.labels.size} labels loaded` });
 
-    // 4. inbound transfers of the screened token (explorer adapters). The trace that scores them is the next item;
-    //    until it lands, fund-flow stays declared as disabled and confidence stays capped at medium.
+    // 4. inbound transfers of the screened token (explorer adapters), then the backward trace that scores them.
+    //    A hard-blocked sender is not traced: the verdict is settled and the calls would be wasted.
     let transfers: Transfer[] = [];
+    let trace: TraceResult | undefined;
     if (this.explorer && token) {
       const w = this.opts.window ?? {};
-      const ex = await this.explorer.screen(req.address, token, defaultWindow({ ...(w.windowDays !== undefined ? { windowDays: w.windowDays } : {}), ...(w.maxTransfers !== undefined ? { maxTransfers: w.maxTransfers } : {}), ...(w.nowMs !== undefined ? { nowMs: w.nowMs } : {}) }));
+      const window = defaultWindow({ ...(w.windowDays !== undefined ? { windowDays: w.windowDays } : {}), ...(w.maxTransfers !== undefined ? { maxTransfers: w.maxTransfers } : {}), ...(w.nowMs !== undefined ? { nowMs: w.nowMs } : {}) });
+      const ex = await this.explorer.screen(req.address, token, window);
       evidence.push(...ex.evidence);
       coverage.push(ex.coverage);
       transfers = ex.transfers;
+      const blocked = evidence.some((e) => e.severity === "block");
+      const depth = req.traceDepth ?? this.traceOpts.depth;
+      if (blocked) {
+        coverage.push({ source: "fund-flow", status: "not_applicable", detail: "sender is hard-blocked; trace skipped" });
+      } else if (ex.coverage.status === "unavailable") {
+        coverage.push({ source: "fund-flow", status: "unavailable", detail: `inbound transfers unavailable, exposure not evaluated: ${ex.coverage.detail ?? ""}`.trim() });
+      } else {
+        const tracer = new Tracer(this.traceDeps(token.chain), { ...this.traceOpts, depth });
+        trace = await tracer.trace(req.address, token, transfers, window, ex.facts?.truncated === true);
+        evidence.push(...trace.evidence);
+        coverage.push(trace.coverage);
+      }
+    } else {
+      coverage.push({ source: "fund-flow", status: "disabled", detail: token ? "explorer fetch switched off; exposure not evaluated" : "token not resolved; exposure not evaluated" });
     }
-    coverage.push({ source: "fund-flow", status: "disabled", detail: "2-hop trace lands next; exposure and behavioural signals not evaluated" });
 
     // 5. identity layer
     let identity: Report["identity"] = "unverified";
@@ -148,9 +189,10 @@ export class Engine {
     }
 
     // 6. score + confidence
-    const s = computeScore(evidence, verdictFloor ? { verdictFloor, flags } : { flags });
+    // confidence first: computeScore copies the flags, so the CONFIDENCE_* flag must exist before the copy
     const c = computeConfidence(coverage);
     if (c.confidence !== "high") flags.push(`CONFIDENCE_${c.confidence.toUpperCase()}:${c.reasons.join("; ")}`);
+    const s = computeScore(evidence, verdictFloor ? { verdictFloor, flags } : { flags });
 
     const report: Omit<Report, "reportHash"> = {
       reportId: randomUUID(),
@@ -171,7 +213,7 @@ export class Engine {
       disclaimer: DISCLAIMER,
     };
     const reportHash = createHash("sha256").update(JSON.stringify(report)).digest("hex");
-    return { report: { ...report, reportHash }, transfers, ...(token ? { token } : {}) };
+    return { report: { ...report, reportHash }, transfers, ...(token ? { token } : {}), ...(trace ? { trace } : {}) };
   }
 
   private resolveToken(req: ScreenRequest, checkedAt: string): { token?: TokenDef; authenticity?: Evidence } {

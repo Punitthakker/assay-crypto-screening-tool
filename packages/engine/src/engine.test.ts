@@ -17,6 +17,60 @@ describe("explorer coverage", () => {
     const r = await engine.screen({ address: "0x1111111111111111111111111111111111111111", chain: "base", asset: "USDC" });
     const ex = r.coverage.find((c) => c.source === "explorer");
     expect(ex?.status).toBe("unavailable");
+    expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("unavailable");
+    expect(r.confidence).toBe("medium");
+  });
+
+  it("marks fund-flow disabled when the explorer is switched off", async () => {
+    const transport = new FixtureTransport(path.join(root, "data/fixtures/recorded.json"));
+    const e = new Engine({ transport, labels: new LabelStore(path.join(root, "data/labels")), explorer: false });
+    const r = await e.screen({ address: "0x1111111111111111111111111111111111111111", chain: "base", asset: "USDC" });
+    expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("disabled");
+  });
+
+  it("skips the trace for a hard-blocked sender", async () => {
+    const r = await engine.screen({ address: "0x0330070FD38Ec3bB94F58FA55D40368271E9e54A", chain: "ethereum", asset: "USDT" });
+    expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("not_applicable");
+  });
+});
+
+describe("2-hop trace end to end (data/fixtures/trace.json)", () => {
+  const NOW = Date.UTC(2026, 10, 2);
+  const SENDER = "0x5e0d000000000000000000000000000000000001";
+  const mk = (over: Partial<ConstructorParameters<typeof Engine>[0]> = {}) =>
+    new Engine({
+      transport: new FixtureTransport(path.join(root, "data/fixtures/trace.json")),
+      labels: new LabelStore(path.join(root, "data/labels")),
+      env: { ETHERSCAN_API_KEY: "test" },
+      window: { nowMs: NOW },
+      ...over,
+    });
+
+  it("worked example 3: mixer at hop 2 behind an unlabelled wallet, dust-floored to 8, CLEAR with high confidence", async () => {
+    const { report: r, trace } = await mk().screenWithFlow({ address: SENDER, chain: "ethereum", asset: "USDT" });
+    expect(r.verdict).toBe("CLEAR");
+    expect(r.score).toBe(8);
+    expect(r.confidence).toBe("high");
+    expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("ok");
+    const mixer = r.evidence.find((e) => e.code === "EXPOSURE_MIXER")!;
+    expect(mixer.hop).toBe(2);
+    expect(mixer.ref).toBe("0x7b01");
+    expect(mixer.summary).toMatch(/^4\.0% of inbound USDT value/);
+    expect(trace?.boundary).toBeCloseTo(1 / 3, 4);
+    expect(trace?.nodes.map((n) => `${n.hop}:${n.status}`).sort()).toEqual(["1:licensed_vasp", "1:unlabelled", "2:mixer", "2:unlabelled"]);
+    expect(trace?.nodes.find((n) => n.hop === 2 && n.status === "unlabelled")?.frozen).toBe(false);
+  });
+
+  it("traceDepth 1 on the request stops at the sender's counterparties and caps confidence at medium", async () => {
+    const r = await mk().screen({ address: SENDER, chain: "ethereum", asset: "USDT", traceDepth: 1 });
+    expect(r.score).toBe(0);
+    expect(r.confidence).toBe("medium");
+    expect(r.flags.join()).toContain("trace depth 1 only");
+    expect(r.evidence.find((e) => e.code === "EXPOSURE_MIXER")).toBeUndefined();
+  });
+
+  it("env CR_TRACE_DEPTH=0 disables the trace", async () => {
+    const r = await mk({ env: { ETHERSCAN_API_KEY: "test", CR_TRACE_DEPTH: "0" } }).screen({ address: SENDER, chain: "ethereum", asset: "USDT" });
     expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("disabled");
     expect(r.confidence).toBe("medium");
   });
