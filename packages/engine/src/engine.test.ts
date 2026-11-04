@@ -160,3 +160,55 @@ describe("control cases (SCORING.md)", () => {
     expect(createHash("sha256").update(JSON.stringify(rest)).digest("hex")).toBe(reportHash);
   });
 });
+
+describe("behavioural signals end to end (data/fixtures/behaviour.json)", () => {
+  const NOW = Date.UTC(2026, 10, 3);
+  const FRESH = "0xf5e5000000000000000000000000000000000001";
+  const MULE = "T9yD14Nj9j7xAB4dbGeiX9h8unkkhXvDAx";
+  const mk = (env: NodeJS.ProcessEnv = { ETHERSCAN_API_KEY: "test" }) =>
+    new Engine({
+      transport: new FixtureTransport(path.join(root, "data/fixtures/behaviour.json")),
+      labels: new LabelStore(path.join(root, "data/labels")),
+      env,
+      window: { nowMs: NOW },
+    });
+
+  it("worked example 1: fresh benign EOA on Base scores 16 (age 10 + tx count 6), CLEAR, confidence high, behaviour ok", async () => {
+    const { report: r, behaviour } = await mk().screenWithFlow({ address: FRESH, chain: "base", asset: "USDC" });
+    expect(r.score).toBe(16);
+    expect(r.verdict).toBe("CLEAR");
+    expect(r.confidence).toBe("high");
+    expect(r.evidence.filter((e) => e.code.startsWith("BEHAV_")).map((e) => e.code).sort()).toEqual(["BEHAV_FRESH_WALLET", "BEHAV_LOW_TX_COUNT"]);
+    expect(r.coverage.find((c) => c.source === "behaviour")).toMatchObject({ status: "ok" });
+    expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("ok");
+    expect(behaviour?.facts.txCount).toBe(3);
+    expect(behaviour?.facts.walletAgeDays).toBeCloseTo(2, 3);
+    expect(behaviour?.facts.topCounterpartyShare).toBeCloseTo(0.6, 6);
+  });
+
+  it("mule pattern on Tron: pass-through 15 + structuring 12 + concentration 6 = 33, LOW; approvals not evaluated on Tron", async () => {
+    const { report: r, behaviour } = await mk({}).screenWithFlow({ address: MULE, chain: "tron", asset: "USDT" });
+    expect(r.evidence.filter((e) => e.code.startsWith("BEHAV_")).map((e) => `${e.code}:${e.points}`).sort()).toEqual(["BEHAV_CONCENTRATION:6", "BEHAV_PASS_THROUGH:15", "BEHAV_STRUCTURING:12"]);
+    expect(r.score).toBe(33);
+    expect(r.verdict).toBe("LOW");
+    expect(r.confidence).toBe("high");
+    const b = r.coverage.find((c) => c.source === "behaviour")!;
+    expect(b.status).toBe("partial");
+    expect(b.detail).toMatch(/not evaluated: BEHAV_DRAINER_APPROVAL \(approval scan not implemented for tron\)/);
+    expect(b.detail).toMatch(/via trongrid, tronscan/);
+    expect(behaviour?.facts.passThroughMedianSeconds).toBe(180);
+    expect(behaviour?.facts.structuringHits).toEqual({ threshold: 3000, count: 10 });
+    expect(r.evidence.find((e) => e.code === "BEHAV_PASS_THROUGH")?.summary).toMatch(/3 min over 6 outbound transfers/);
+  });
+
+  it("CR_BEHAVIOUR=0 switches the signals off and says so", async () => {
+    const r = await mk({ ETHERSCAN_API_KEY: "test", CR_BEHAVIOUR: "0" }).screen({ address: FRESH, chain: "base", asset: "USDC" });
+    expect(r.score).toBe(0);
+    expect(r.coverage.find((c) => c.source === "behaviour")?.status).toBe("disabled");
+  });
+
+  it("a hard-blocked sender skips the behavioural fetches", async () => {
+    const r = await engine.screen({ address: "0x0330070FD38Ec3bB94F58FA55D40368271E9e54A", chain: "ethereum", asset: "USDT" });
+    expect(r.coverage.find((c) => c.source === "behaviour")?.status).toBe("not_applicable");
+  });
+});

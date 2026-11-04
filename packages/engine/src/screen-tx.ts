@@ -16,6 +16,7 @@ import {
 } from "@cr/datasources";
 import type { Engine } from "./screen.js";
 import type { TraceNode, TraceResult } from "./trace.js";
+import type { BehaviourResult } from "./behaviour.js";
 
 /**
  * Screen by transaction: paste the hash or explorer link of the transfer you are
@@ -62,6 +63,7 @@ export interface TxReport {
   sources: Source[];
   sourcesNote: string;
   trace?: TraceSummary;
+  behaviour?: BehaviourResult["facts"] & { notEvaluated: Record<string, string> };
   /** every token the tx moved that is not a registry USDT/USDC, for the fake-token warning */
   otherTokens: { token: string; value: number; from: string; to: string }[];
 }
@@ -88,6 +90,8 @@ export interface AddressReport {
   sources: Source[];
   sourcesNote: string;
   trace?: TraceSummary;
+  /** the measured facts behind the BEHAV_* lines (wallet age, tx count, median hold, concentration) */
+  behaviour?: BehaviourResult["facts"] & { notEvaluated: Record<string, string> };
 }
 
 /** The trace graph without the engine internals: enough to draw it and link every node to an explorer. */
@@ -105,6 +109,10 @@ export interface TraceSummary {
 export function summarizeTrace(t: TraceResult | undefined): TraceSummary | undefined {
   if (!t) return undefined;
   return { depthRequested: t.depthRequested, depthReached: t.depthReached, exposure: t.exposure, untraced: t.untraced, boundary: t.boundary, dusted: t.dusted, inboundTotal: t.inboundTotal, nodes: t.nodes };
+}
+
+export function summarizeBehaviour(b: BehaviourResult | undefined): (BehaviourResult["facts"] & { notEvaluated: Record<string, string> }) | undefined {
+  return b ? { ...b.facts, notEvaluated: b.notEvaluated } : undefined;
 }
 
 export type LookupReport = AddressReport | ({ kind: "tx" } & TxReport);
@@ -140,9 +148,10 @@ export class TxScreener {
     const chain = c.chain ?? req.chain;
     if (!chain) throw new Error("pick the chain for an EVM address, or paste the explorer link");
     const asset = req.asset ?? "USDT";
-    const { report, transfers, token, trace } = await this.engine.screenWithFlow({ address: c.address, chain, asset, ...(req.amount !== undefined ? { amount: req.amount } : {}) });
+    const { report, transfers, token, trace, behaviour } = await this.engine.screenWithFlow({ address: c.address, chain, asset, ...(req.amount !== undefined ? { amount: req.amount } : {}) });
     const sources = token ? await this.sources(c.address, token, transfers, trace) : [];
     const ts = summarizeTrace(trace);
+    const bs = summarizeBehaviour(behaviour);
     return {
       kind: "address",
       address: c.address,
@@ -153,6 +162,7 @@ export class TxScreener {
       sources,
       sourcesNote: this.note(report, sources, transfers),
       ...(ts ? { trace: ts } : {}),
+      ...(bs ? { behaviour: bs } : {}),
     };
   }
 
@@ -191,7 +201,7 @@ export class TxScreener {
     const def = tokenByAddress(chain, t.token)!;
     const paysReceiver = req.receiver ? normalizeAddress(t.to, fam) === normalizeAddress(req.receiver, fam) : null;
 
-    const { report, transfers, trace } = await this.engine.screenWithFlow({
+    const { report, transfers, trace, behaviour } = await this.engine.screenWithFlow({
       address: t.from,
       chain,
       asset: def.symbol,
@@ -201,6 +211,7 @@ export class TxScreener {
     const sources = await this.sources(t.from, def, transfers, trace);
     const sourcesNote = this.note(report, sources, transfers);
     const ts = summarizeTrace(trace);
+    const bs = summarizeBehaviour(behaviour);
 
     return {
       tx,
@@ -209,6 +220,7 @@ export class TxScreener {
       sources,
       sourcesNote,
       ...(ts ? { trace: ts } : {}),
+      ...(bs ? { behaviour: bs } : {}),
       otherTokens,
     };
   }

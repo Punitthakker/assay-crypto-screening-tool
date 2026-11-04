@@ -63,7 +63,8 @@ Status key: VERIFIED (confirmed against issuer source today), LIVE-CHECK (addres
 | Blockscout | Ethereum, Base, Arbitrum, Polygon, OP hosted instances | hosted free, soft limit | VERIFIED (docs), hosts LIVE-CHECK. Adapter: `BlockscoutExplorer`, `/api/v2/addresses/{addr}/token-transfers?filter=to&token=`, `next_page_params` pagination. Override hosts with `BLOCKSCOUT_<CHAIN>` |
 | Routescan (Avalanche) | Etherscan-compatible API for chain 43114 | free, no key | LIVE-CHECK. Adapter: `EtherscanV2Explorer` with the Routescan base URL, fallback only |
 | BNB Chain explorer | none keyless | - | OPEN - needs `ETHERSCAN_API_KEY` or a `BLOCKSCOUT_BNB` host |
-| Public RPC rotation | all EVM | varies | configured in `packages/shared/src/chains.ts` |
+| Public RPC rotation | all EVM | varies | configured in `packages/shared/src/chains.ts`. Also `eth_getTransactionCount` and `eth_getCode` for the behavioural signals (2026-11-04) |
+| Account activity (2026-11-04) | EVM: Etherscan `txlist`, `getsourcecode`, `logs/getLogs`; Blockscout `/api/v2/addresses/{a}`, `/counters`, `/transactions`. Tron: TronGrid `/v1/accounts/{a}`, Tronscan `/api/accountv2`. Solana: Helius `/v0/addresses/{a}/transactions` | same tiers as above | LIVE-CHECK (VERIFY.md step 5). Adapter: `ActivityAdapter` |
 
 ## Regulatory references used in the pitch
 

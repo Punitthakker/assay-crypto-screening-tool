@@ -18,9 +18,10 @@ Working today, offline against recorded fixtures and online against public RPCs:
 - CLI with human and JSON output, exit code 3 on BLOCK
 - Screen by transaction (2026-11-02): paste a tx hash or a tronscan / etherscan link on /check or `POST /v1/lookup`; the sender of that transfer is screened and its inbound sources are listed with label, OFAC and freeze checks
 - Explorer adapters (Phase 1b, 2026-11-02): inbound transfers of the screened token over 90 days or 200 transfers via Etherscan V2, Blockscout, Routescan, TronGrid, Helius; keyless fallback on Ethereum, Base, Arbitrum, Polygon, Avalanche, Tron
+- Behavioural signals (Phase 1b, 2026-11-04): wallet age, transaction count, dormancy then reactivation, pass-through speed, structuring under reporting thresholds, counterparty concentration, unverified contract with an admin, approvals to labelled drainers; `BEHAV_*` evidence capped at 35, a `behaviour` coverage line that names every signal it could not evaluate
 - 2-hop backward trace (Phase 1b, 2026-11-03): every counterparty of the sender, and of their unlabelled counterparties, is checked against labels, OFAC and the issuer freeze list; exposure is value-weighted and hop-decayed into `EXPOSURE_*` evidence per category; licensed exchange wallets end the trace; fan-out cap 25, dust floor, `fund-flow` coverage line, so confidence can now reach `high`
 
-Not yet: behavioural signals (next), Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). Explorer adapters and the trace are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md step 4 have been run live (`docs/VERIFY.md`).
+Not yet: label imports and `docs/LICENCES.md` (next), freeze event index, Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
 
 ## Run
 
@@ -44,10 +45,10 @@ No API keys are required. `.env.example` lists optional keys that raise rate lim
 ```
 apps/cli            screen + verify-sources
 packages/shared     chains, tokens, address parsing, zod schemas
-packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, sanctions-oracle, labels, explorer (etherscan-v2, blockscout, routescan, trongrid, helius)
-packages/engine     scoring, orchestration, 2-hop trace (trace.ts), report
+packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, sanctions-oracle, labels, explorer (etherscan-v2, blockscout, routescan, trongrid, tronscan, helius), activity
+packages/engine     scoring, orchestration, 2-hop trace (trace.ts), behavioural signals (behaviour.ts), report
 data/labels         seed labels (json)
-data/fixtures       recorded.json (on-chain responses), ofac-snapshot.json, explorers.json and trace.json (hand-encoded, build-*.ts)
+data/fixtures       recorded.json (on-chain responses), ofac-snapshot.json, explorers.json, trace.json and behaviour.json (hand-encoded, build-*.ts)
 docs                SOURCES, REGISTRY, SCORING, DECISIONS, VERIFY, QUESTIONS
 ```
 

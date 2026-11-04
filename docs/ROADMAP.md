@@ -11,7 +11,7 @@ One item per daily build. The scheduled task "Assay daily build" picks the first
 ## Phase 1b
 - [x] Explorer adapters: Etherscan V2, TronGrid, Helius, Blockscout fallback (inbound transfers of the screened token, 90 days or 200 transfers) - shipped 2026-11-02, live check pending (docs/VERIFY.md step 2)
 - [x] 2-hop backward trace, value-weighted and hop-decayed exposure, fan-out cap 25, licensed exchange boundary, dust floor, fund-flow coverage line - shipped 2026-11-03, live check pending (docs/VERIFY.md step 4)
-- [ ] Behavioural signals (BEHAV_*)
+- [x] Behavioural signals (BEHAV_*): wallet age, tx count, dormancy, pass-through, structuring, concentration, contract-with-admin, drainer approvals - shipped 2026-11-04, live check pending (docs/VERIFY.md step 5)
 - [ ] Label import scripts (ImMike, eth-phishing-detect, ScamSniffer), mixers, bridges, data/vasps.json, docs/LICENCES.md
 - [ ] Historic freeze event index ("previously frozen")
 - [ ] Watchman identity-layer integration via docker-compose (submodule modules/moneybee-risk-datasources)

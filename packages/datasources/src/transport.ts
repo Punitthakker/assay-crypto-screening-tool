@@ -9,6 +9,8 @@ export interface SolanaTokenAccount {
   pubkey: string;
   state: "initialized" | "frozen" | "uninitialized";
   amount: string;
+  /** approved delegate on the token account, when one is set (approvals-to-drainer signal) */
+  delegate?: string;
 }
 
 export interface EvmReceipt {
@@ -30,6 +32,8 @@ export interface Transport {
   readonly mode: TransportMode;
   evmCall(chain: ChainId, to: Hex, data: Hex): Promise<Hex>;
   evmGetCode(chain: ChainId, address: Hex): Promise<Hex>;
+  /** eth_getTransactionCount: outbound transaction count (nonce) of an EOA */
+  evmGetTransactionCount(chain: ChainId, address: Hex): Promise<number>;
   /** receipt plus block timestamp; throws when the hash is unknown to the RPC (pending or wrong chain) */
   evmGetTransactionReceipt(chain: ChainId, hash: Hex): Promise<EvmReceipt>;
   tronConstantCall(contractBase58: string, selector: string, paramHex: string): Promise<Hex>;
@@ -79,6 +83,10 @@ export class LiveTransport implements Transport {
     return (code ?? "0x") as Hex;
   }
 
+  async evmGetTransactionCount(chain: ChainId, address: Hex): Promise<number> {
+    return await withTimeout(this.client(chain).getTransactionCount({ address }), this.timeoutMs * 2, `eth_getTransactionCount ${chain}`);
+  }
+
   async evmGetTransactionReceipt(chain: ChainId, hash: Hex): Promise<EvmReceipt> {
     const c = this.client(chain);
     const r = await withTimeout(c.getTransactionReceipt({ hash }), this.timeoutMs * 2, `eth_getTransactionReceipt ${chain}`);
@@ -119,7 +127,7 @@ export class LiveTransport implements Transport {
     const rpcs = rpcsFor(getChain("solana"), this.env);
     const url = this.env.HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${this.env.HELIUS_API_KEY}` : rpcs[0]!;
     const res = await this.fetchJson<{
-      result?: { value?: { pubkey: string; account: { data: { parsed: { info: { state: string; tokenAmount: { amount: string } } } } } }[] };
+      result?: { value?: { pubkey: string; account: { data: { parsed: { info: { state: string; delegate?: string; tokenAmount: { amount: string } } } } } }[] };
       error?: unknown;
     }>(url, {
       method: "POST",
@@ -136,6 +144,7 @@ export class LiveTransport implements Transport {
       pubkey: v.pubkey,
       state: v.account.data.parsed.info.state as SolanaTokenAccount["state"],
       amount: v.account.data.parsed.info.tokenAmount.amount,
+      ...(v.account.data.parsed.info.delegate ? { delegate: v.account.data.parsed.info.delegate } : {}),
     }));
   }
 
@@ -189,7 +198,7 @@ export function redactUrl(url: string): string {
 /**
  * Fixture transport: answers from data/fixtures/recorded.json.
  * Keys:  evm:<chain>:<to>:<data>    tron:<contract>:<selector>:<param>
- *        sol:<owner>:<mint>          url:<url>
+ *        sol:<owner>:<mint>          url:<url>    nonce:<chain>:<address>
  * Unknown keys throw, so a test can never silently pass on missing data.
  * In record mode (CR_RECORD=1) it wraps a live transport and writes what it sees.
  */
@@ -216,6 +225,9 @@ export class FixtureTransport implements Transport {
   }
   evmGetCode(chain: ChainId, address: Hex) {
     return this.get(`code:${chain}:${address.toLowerCase()}`, () => this.recordFrom!.evmGetCode(chain, address));
+  }
+  evmGetTransactionCount(chain: ChainId, address: Hex) {
+    return this.get<number>(`nonce:${chain}:${address.toLowerCase()}`, () => this.recordFrom!.evmGetTransactionCount(chain, address));
   }
   evmGetTransactionReceipt(chain: ChainId, hash: Hex) {
     return this.get<EvmReceipt>(`receipt:${chain}:${hash.toLowerCase()}`, () => this.recordFrom!.evmGetTransactionReceipt(chain, hash));

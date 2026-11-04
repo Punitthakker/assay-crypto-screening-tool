@@ -68,7 +68,8 @@ export function computeScore(evidence: Evidence[], opts: { verdictFloor?: Verdic
 /**
  * Confidence from coverage: see SCORING.md.
  * Required sources for "high": issuer-freeze ok, ofac-sdn ok, chainalysis-oracle ok or not_applicable, lists < 36h.
- * Fund-flow and behavioural adapters are optional in Phase 1a; while they are "disabled" the ceiling is "medium".
+ * Fund-flow "disabled" or "unavailable" and behaviour "unavailable" cap at "medium"; behaviour "partial"
+ * (a signal or two not evaluated on a keyless deployment) is stated in the coverage line and does not downgrade.
  */
 export function computeConfidence(coverage: Coverage[]): { confidence: Confidence; reasons: string[] } {
   const reasons: string[] = [];
@@ -95,6 +96,8 @@ export function computeConfidence(coverage: Coverage[]): { confidence: Confidenc
   if (oracle && oracle.status === "unavailable") downgrade("medium", "sanctions oracle unreachable");
   if (!flow || flow.status === "disabled" || flow.status === "unavailable") downgrade("medium", "fund-flow trace not run; exposure and behavioural signals absent");
   else if (flow.status === "partial") downgrade("medium", flow.detail ?? "trace depth or fan-out limited");
+  const behaviour = get("behaviour");
+  if (behaviour && behaviour.status === "unavailable") downgrade("medium", "behavioural signals not evaluated");
 
   return { confidence: level, reasons };
 }

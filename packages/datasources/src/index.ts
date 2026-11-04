@@ -6,3 +6,4 @@ export * from "./adapters/sanctions-oracle.js";
 export * from "./adapters/labels.js";
 export * from "./adapters/explorer.js";
 export * from "./adapters/tx.js";
+export * from "./adapters/activity.js";

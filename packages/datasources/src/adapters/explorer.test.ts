@@ -42,6 +42,13 @@ describe("EtherscanV2Explorer", () => {
     expect(page.truncated).toBe(false);
   });
 
+  it("outbound transfers come from the same tokentx page, filtered on the from side", async () => {
+    const page = await es.outboundTransfers(ADDR.ethA, tok("ethereum", "USDT"), win());
+    expect(page.transfers.map((t) => t.txHash)).toEqual(["0xf002"]);
+    expect(page.transfers[0]!.from.toLowerCase()).toBe(ADDR.ethA.toLowerCase());
+    expect(page.transfers[0]!.value).toBe(400);
+  });
+
   it("treats 'No transactions found' as an empty page, not an error", async () => {
     const page = await es.inboundTransfers(ADDR.ethEmpty, tok("ethereum", "USDT"), win());
     expect(page.transfers).toHaveLength(0);

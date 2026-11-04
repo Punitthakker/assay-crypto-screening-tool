@@ -54,10 +54,14 @@ export interface TransferPage {
   truncated: boolean;
 }
 
+export type Direction = "in" | "out";
+
 export interface ExplorerAdapter {
   readonly provider: string;
   supports(chain: ChainId): boolean;
   inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage>;
+  /** transfers sent by the address (behavioural signals: pass-through, structuring) */
+  outboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage>;
 }
 
 export interface InboundTransfersResult {
@@ -78,7 +82,7 @@ function unitsOf(valueBase: string, decimals: number): number {
   return Number(`${whole}${fracStr ? "." + fracStr : ""}`);
 }
 
-/** Keep only inbound transfers of the screened token inside the window, newest first, capped. */
+/** Keep only transfers of the screened token in one direction inside the window, newest first, capped. */
 function finalize(
   provider: string,
   raw: Transfer[],
@@ -86,6 +90,7 @@ function finalize(
   token: TokenDef,
   window: TransferWindow,
   reachedWindowEnd: boolean,
+  direction: Direction = "in",
 ): TransferPage {
   const fam = getChain(token.chain).family;
   const me = normalizeAddress(address, fam);
@@ -93,7 +98,7 @@ function finalize(
   const start = Math.floor((window.nowMs - window.windowDays * DAY_MS) / 1000);
   const inbound = raw
     .filter((t) => t.token.toLowerCase() === tok)
-    .filter((t) => normalizeAddress(t.to, fam) === me)
+    .filter((t) => normalizeAddress(direction === "in" ? t.to : t.from, fam) === me)
     .filter((t) => t.timestamp >= start)
     .filter((t) => BigInt(t.valueBase) > 0n)
     .sort((a, b) => b.timestamp - a.timestamp);
@@ -158,7 +163,14 @@ export class EtherscanV2Explorer implements ExplorerAdapter {
     if (c.family !== "evm" || !c.etherscanChainId) return false;
     return this.only ? this.only.includes(chain) : true;
   }
-  async inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+  inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "in");
+  }
+  outboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "out");
+  }
+  /** tokentx returns both directions on one URL, so in and out share a fixture key. */
+  private async transfers(address: string, token: TokenDef, window: TransferWindow, direction: Direction): Promise<TransferPage> {
     const c = getChain(token.chain);
     const start = Math.floor((window.nowMs - window.windowDays * DAY_MS) / 1000);
     const rows: Transfer[] = [];
@@ -203,7 +215,7 @@ export class EtherscanV2Explorer implements ExplorerAdapter {
           timestamp: ts,
           blockNumber: Number(r.blockNumber),
         });
-        if (r.to.toLowerCase() === address.toLowerCase() && ts >= start) inbound++;
+        if ((direction === "in" ? r.to : r.from).toLowerCase() === address.toLowerCase() && ts >= start) inbound++;
       }
       const oldest = res.result[res.result.length - 1]!;
       if (Number(oldest.timeStamp) < start) {
@@ -216,7 +228,7 @@ export class EtherscanV2Explorer implements ExplorerAdapter {
       }
       if (inbound >= window.maxTransfers) break;
     }
-    return finalize(this.provider, rows, address, token, window, reachedWindowEnd);
+    return finalize(this.provider, rows, address, token, window, reachedWindowEnd, direction);
   }
 }
 
@@ -272,7 +284,13 @@ export class BlockscoutExplorer implements ExplorerAdapter {
   supports(chain: ChainId): boolean {
     return getChain(chain).family === "evm" && Boolean(this.hosts[chain]);
   }
-  async inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+  inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "in");
+  }
+  outboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "out");
+  }
+  private async transfers(address: string, token: TokenDef, window: TransferWindow, direction: Direction): Promise<TransferPage> {
     const host = this.hosts[token.chain];
     if (!host) throw new Error(`blockscout: no host for ${token.chain}`);
     const start = Math.floor((window.nowMs - window.windowDays * DAY_MS) / 1000);
@@ -280,7 +298,7 @@ export class BlockscoutExplorer implements ExplorerAdapter {
     let reachedWindowEnd = false;
     let next: Record<string, unknown> | null | undefined = undefined;
     for (let page = 1; page <= this.maxPages; page++) {
-      const q = new URLSearchParams({ type: "ERC-20", filter: "to", token: token.address });
+      const q = new URLSearchParams({ type: "ERC-20", filter: direction === "in" ? "to" : "from", token: token.address });
       if (next) for (const [k, v] of Object.entries(next)) q.set(k, String(v));
       const res = BlockscoutResponse.parse(
         await this.transport.fetchJson(`${host}/api/v2/addresses/${address}/token-transfers?${q.toString()}`),
@@ -309,7 +327,7 @@ export class BlockscoutExplorer implements ExplorerAdapter {
       if (rows.length >= window.maxTransfers) break;
       next = res.next_page_params;
     }
-    return finalize(this.provider, rows, address, token, window, reachedWindowEnd);
+    return finalize(this.provider, rows, address, token, window, reachedWindowEnd, direction);
   }
 }
 
@@ -347,7 +365,13 @@ export class TronGridExplorer implements ExplorerAdapter {
   supports(chain: ChainId): boolean {
     return chain === "tron";
   }
-  async inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+  inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "in");
+  }
+  outboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "out");
+  }
+  private async transfers(address: string, token: TokenDef, window: TransferWindow, direction: Direction): Promise<TransferPage> {
     const startMs = window.nowMs - window.windowDays * DAY_MS;
     const headers: Record<string, string> = { accept: "application/json" };
     if (this.key) headers["TRON-PRO-API-KEY"] = this.key;
@@ -356,7 +380,7 @@ export class TronGridExplorer implements ExplorerAdapter {
     let reachedWindowEnd = false;
     for (let page = 1; page <= this.maxPages; page++) {
       const q = new URLSearchParams({
-        only_to: "true",
+        [direction === "in" ? "only_to" : "only_from"]: "true",
         only_confirmed: "true",
         limit: "200",
         contract_address: token.address,
@@ -390,7 +414,7 @@ export class TronGridExplorer implements ExplorerAdapter {
       }
       if (rows.length >= window.maxTransfers) break;
     }
-    return finalize(this.provider, rows, address, token, window, reachedWindowEnd);
+    return finalize(this.provider, rows, address, token, window, reachedWindowEnd, direction);
   }
 }
 
@@ -434,7 +458,13 @@ export class TronscanExplorer implements ExplorerAdapter {
   supports(chain: ChainId): boolean {
     return chain === "tron";
   }
-  async inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+  inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "in");
+  }
+  outboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "out");
+  }
+  private async transfers(address: string, token: TokenDef, window: TransferWindow, direction: Direction): Promise<TransferPage> {
     const startMs = window.nowMs - window.windowDays * DAY_MS;
     const headers: Record<string, string> = { accept: "application/json" };
     if (this.key) headers["TRON-PRO-API-KEY"] = this.key;
@@ -445,7 +475,7 @@ export class TronscanExplorer implements ExplorerAdapter {
         limit: "50",
         start: String(page * 50),
         contract_address: token.address,
-        toAddress: address,
+        [direction === "in" ? "toAddress" : "fromAddress"]: address,
         start_timestamp: String(startMs),
         end_timestamp: String(window.nowMs),
         confirm: "true",
@@ -475,7 +505,7 @@ export class TronscanExplorer implements ExplorerAdapter {
       }
       if (rows.length >= window.maxTransfers) break;
     }
-    return finalize(this.provider, rows, address, token, window, reachedWindowEnd);
+    return finalize(this.provider, rows, address, token, window, reachedWindowEnd, direction);
   }
 }
 
@@ -508,7 +538,14 @@ export class HeliusExplorer implements ExplorerAdapter {
   supports(chain: ChainId): boolean {
     return chain === "solana" && Boolean(this.key);
   }
-  async inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+  inboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "in");
+  }
+  outboundTransfers(address: string, token: TokenDef, window: TransferWindow): Promise<TransferPage> {
+    return this.transfers(address, token, window, "out");
+  }
+  /** one enhanced-transactions URL carries both directions, so in and out share a fixture key */
+  private async transfers(address: string, token: TokenDef, window: TransferWindow, direction: Direction): Promise<TransferPage> {
     if (!this.key) throw new Error("helius: HELIUS_API_KEY not set");
     const start = Math.floor((window.nowMs - window.windowDays * DAY_MS) / 1000);
     const rows: Transfer[] = [];
@@ -549,10 +586,10 @@ export class HeliusExplorer implements ExplorerAdapter {
         reachedWindowEnd = true;
         break;
       }
-      if (rows.filter((r) => r.to === address).length >= window.maxTransfers) break;
+      if (rows.filter((r) => (direction === "in" ? r.to : r.from) === address).length >= window.maxTransfers) break;
       before = oldest.signature;
     }
-    return finalize(this.provider, rows, address, token, window, reachedWindowEnd);
+    return finalize(this.provider, rows, address, token, window, reachedWindowEnd, direction);
   }
 }
 
@@ -587,7 +624,13 @@ export class ExplorerRouter {
     return this.adapters.filter((a) => a.supports(chain));
   }
 
-  async inboundTransfers(address: string, token: TokenDef, window: TransferWindow = defaultWindow()): Promise<InboundTransfersResult> {
+  inboundTransfers(address: string, token: TokenDef, window: TransferWindow = defaultWindow()): Promise<InboundTransfersResult> {
+    return this.transfers(address, token, window, "in");
+  }
+  outboundTransfers(address: string, token: TokenDef, window: TransferWindow = defaultWindow()): Promise<InboundTransfersResult> {
+    return this.transfers(address, token, window, "out");
+  }
+  async transfers(address: string, token: TokenDef, window: TransferWindow, direction: Direction): Promise<InboundTransfersResult> {
     const fromIso = new Date(window.nowMs - window.windowDays * DAY_MS).toISOString();
     const base = { window: { windowDays: window.windowDays, maxTransfers: window.maxTransfers, fromIso } };
     const cands = this.candidates(token.chain);
@@ -598,7 +641,7 @@ export class ExplorerRouter {
     const errors: string[] = [];
     for (const a of cands) {
       try {
-        const page = await a.inboundTransfers(address, token, window);
+        const page = direction === "in" ? await a.inboundTransfers(address, token, window) : await a.outboundTransfers(address, token, window);
         const n = page.transfers.length;
         return {
           status: "ok",
@@ -606,7 +649,7 @@ export class ExplorerRouter {
           transfers: page.transfers,
           truncated: page.truncated,
           ...base,
-          detail: `${n} inbound ${token.onChainSymbol} transfer${n === 1 ? "" : "s"} since ${fromIso.slice(0, 10)} via ${page.provider}${page.truncated ? ` (capped at ${window.maxTransfers})` : ""}${errors.length ? `; ${errors.join("; ")}` : ""}`,
+          detail: `${n} ${direction === "in" ? "inbound" : "outbound"} ${token.onChainSymbol} transfer${n === 1 ? "" : "s"} since ${fromIso.slice(0, 10)} via ${page.provider}${page.truncated ? ` (capped at ${window.maxTransfers})` : ""}${errors.length ? `; ${errors.join("; ")}` : ""}`,
         };
       } catch (e) {
         errors.push(`${a.provider}: ${e instanceof Error ? e.message : String(e)}`);

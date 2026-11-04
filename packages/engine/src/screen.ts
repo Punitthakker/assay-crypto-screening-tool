@@ -17,6 +17,7 @@ import {
   type Verdict,
 } from "@cr/shared";
 import {
+  ActivityAdapter,
   ExplorerRouter,
   IssuerFreezeAdapter,
   LabelStore,
@@ -29,6 +30,7 @@ import {
 } from "@cr/datasources";
 import { SCORING_VERSION, computeConfidence, computeScore } from "./score.js";
 import { Tracer, traceOptionsFromEnv, type TraceDeps, type TraceOptions, type TraceResult } from "./trace.js";
+import { DEFAULT_BEHAVIOUR, analyseBehaviour, type BehaviourOptions, type BehaviourResult } from "./behaviour.js";
 
 export interface EngineOptions {
   transport: Transport;
@@ -42,6 +44,8 @@ export interface EngineOptions {
   window?: { windowDays?: number; maxTransfers?: number; nowMs?: number };
   /** backward trace settings; defaults from env (CR_TRACE_DEPTH, CR_TRACE_FANOUT, CR_TRACE_DUST, CR_TRACE_FREEZE_CAP, CR_TRACE_EXPAND_CAP) */
   trace?: Partial<TraceOptions>;
+  /** behavioural signal thresholds; false skips the activity and outbound fetches (CR_BEHAVIOUR=0 does the same) */
+  behaviour?: Partial<BehaviourOptions> | false;
 }
 
 export class Engine {
@@ -52,6 +56,8 @@ export class Engine {
   private threshold: number;
   private explorer: ExplorerRouter | undefined;
   private traceOpts: TraceOptions;
+  private activity: ActivityAdapter;
+  private behaviourOpts: BehaviourOptions | false;
 
   constructor(private opts: EngineOptions) {
     this.ofac = new OfacAdapter(opts.transport);
@@ -61,6 +67,9 @@ export class Engine {
     this.threshold = opts.travelRuleThresholdUsd ?? Number(opts.env?.CR_TRAVEL_RULE_THRESHOLD_USD ?? 953);
     this.explorer = opts.explorer === false ? undefined : (opts.explorer ?? new ExplorerRouter(opts.transport, opts.env ?? process.env));
     this.traceOpts = traceOptionsFromEnv(opts.env ?? process.env, opts.trace ?? {});
+    this.activity = new ActivityAdapter(opts.transport, opts.env ?? process.env);
+    const env = opts.env ?? process.env;
+    this.behaviourOpts = opts.behaviour === false || env.CR_BEHAVIOUR === "0" ? false : { ...DEFAULT_BEHAVIOUR, structuringThresholds: [...new Set([1000, 3000, this.threshold, 10000])], ...(opts.behaviour ?? {}) };
   }
 
   /** Real adapters behind the tracer: explorer for hop 2, labels, the OFAC set, issuer freeze reads. */
@@ -87,7 +96,7 @@ export class Engine {
   }
 
   /** Same as screen() but also hands back the sender's inbound transfers for source listing. */
-  async screenWithFlow(input: unknown): Promise<{ report: Report; transfers: Transfer[]; token?: TokenDef; trace?: TraceResult }> {
+  async screenWithFlow(input: unknown): Promise<{ report: Report; transfers: Transfer[]; token?: TokenDef; trace?: TraceResult; behaviour?: BehaviourResult }> {
     const req: ScreenRequest = ScreenRequestSchema.parse(input);
     const chain = getChain(req.chain);
     const checkedAt = new Date().toISOString();
@@ -145,6 +154,7 @@ export class Engine {
     //    A hard-blocked sender is not traced: the verdict is settled and the calls would be wasted.
     let transfers: Transfer[] = [];
     let trace: TraceResult | undefined;
+    let behaviour: BehaviourResult | undefined;
     if (this.explorer && token) {
       const w = this.opts.window ?? {};
       const window = defaultWindow({ ...(w.windowDays !== undefined ? { windowDays: w.windowDays } : {}), ...(w.maxTransfers !== undefined ? { maxTransfers: w.maxTransfers } : {}), ...(w.nowMs !== undefined ? { nowMs: w.nowMs } : {}) });
@@ -159,13 +169,27 @@ export class Engine {
       } else if (ex.coverage.status === "unavailable") {
         coverage.push({ source: "fund-flow", status: "unavailable", detail: `inbound transfers unavailable, exposure not evaluated: ${ex.coverage.detail ?? ""}`.trim() });
       } else {
+        // the trace and the behavioural fetches (outbound transfers, account activity, approvals) run side by side
         const tracer = new Tracer(this.traceDeps(token.chain), { ...this.traceOpts, depth });
-        trace = await tracer.trace(req.address, token, transfers, window, ex.facts?.truncated === true);
+        const [t, b] = await Promise.all([
+          tracer.trace(req.address, token, transfers, window, ex.facts?.truncated === true),
+          this.behaviourOpts ? this.behaviour(req.address, token, transfers, window.nowMs, label, this.behaviourOpts) : Promise.resolve(undefined),
+        ]);
+        trace = t;
         evidence.push(...trace.evidence);
         coverage.push(trace.coverage);
+        if (b) {
+          behaviour = b;
+          evidence.push(...b.evidence);
+          coverage.push(b.coverage);
+        } else coverage.push({ source: "behaviour", status: "disabled", detail: "behavioural signals switched off" });
+      }
+      if (!behaviour && !coverage.some((c) => c.source === "behaviour")) {
+        coverage.push({ source: "behaviour", status: blocked ? "not_applicable" : "unavailable", detail: blocked ? "sender is hard-blocked; behavioural signals skipped" : "inbound transfers unavailable; behavioural signals not evaluated" });
       }
     } else {
       coverage.push({ source: "fund-flow", status: "disabled", detail: token ? "explorer fetch switched off; exposure not evaluated" : "token not resolved; exposure not evaluated" });
+      coverage.push({ source: "behaviour", status: "disabled", detail: "explorer fetch switched off; behavioural signals not evaluated" });
     }
 
     // 5. identity layer
@@ -213,7 +237,32 @@ export class Engine {
       disclaimer: DISCLAIMER,
     };
     const reportHash = createHash("sha256").update(JSON.stringify(report)).digest("hex");
-    return { report: { ...report, reportHash }, transfers, ...(token ? { token } : {}), ...(trace ? { trace } : {}) };
+    return { report: { ...report, reportHash }, transfers, ...(token ? { token } : {}), ...(trace ? { trace } : {}), ...(behaviour ? { behaviour } : {}) };
+  }
+
+  /** Outbound transfers, account activity and approvals for the sender, then the 2b signals. Never throws. */
+  private async behaviour(address: string, token: TokenDef, inbound: Transfer[], nowMs: number, senderLabel: ReturnType<LabelStore["lookup"]>, opts: BehaviourOptions): Promise<BehaviourResult> {
+    const w = this.opts.window ?? {};
+    const window = defaultWindow({ ...(w.windowDays !== undefined ? { windowDays: w.windowDays } : {}), ...(w.maxTransfers !== undefined ? { maxTransfers: w.maxTransfers } : {}), nowMs });
+    const [out, activity, approvals] = await Promise.all([
+      this.explorer!.outboundTransfers(address, token, window).catch(() => null),
+      this.activity.activity(address, token.chain).catch(() => null),
+      this.activity.approvals(address, token).catch(() => null),
+    ]);
+    return analyseBehaviour(
+      {
+        sender: address,
+        token,
+        nowMs,
+        inbound,
+        outbound: out && out.status === "ok" ? out.transfers : null,
+        activity,
+        approvals,
+        label: (a) => this.labels.lookup(a, token.chain),
+        senderLabel,
+      },
+      opts,
+    );
   }
 
   private resolveToken(req: ScreenRequest, checkedAt: string): { token?: TokenDef; authenticity?: Evidence } {
