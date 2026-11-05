@@ -6,7 +6,8 @@
   "scripts": {
     "screen": "tsx --tsconfig ../../tsconfig.json src/screen.ts",
     "verify:sources": "tsx --tsconfig ../../tsconfig.json src/verify-sources.ts",
-    "verify:explorers": "tsx --tsconfig ../../tsconfig.json src/verify-explorers.ts"
+    "verify:explorers": "tsx --tsconfig ../../tsconfig.json src/verify-explorers.ts",
+    "import:labels": "tsx --tsconfig ../../tsconfig.json src/import-labels.ts"
   },
   "dependencies": {
     "@cr/shared": "workspace:*",

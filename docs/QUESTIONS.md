@@ -2,6 +2,10 @@
 
 Answer inline or in DECISIONS.md. Items stay here until decided.
 
+## 2026-11-05
+9. ScamSniffer address blacklist is GPL-3.0 (read from the repo's LICENSE today). Bundling GPL data inside Assay may oblige source disclosure; I am not a lawyer. It is also frozen by upstream since February 2024 (2,530 addresses), so the value is limited. The importer supports it as opt-in only (`pnpm import:labels -- scamsniffer`, loaded via `CR_LABELS_EXTRA_DIR`). Leave it off, or ask ScamSniffer for a commercial licence to their live list (their README invites it)?
+10. `data/vasps.json` decides which exchange wallets end the trace (licensed) and which score 20 points (unlicensed). I filled 33 entities from memory of public registers: 15 licensed (Binance, Coinbase, Kraken, OKX, Bybit, Crypto.com, Gemini, Bitstamp, Upbit, Bithumb, Coinone, BitOasis, Rain, Indodax, Tokocrypto), 4 unlicensed (YoBit, Hotbit, Liqui, ZB.com), 14 unknown (HTX, KuCoin, Gate.io, Bitfinex, Poloniex and others, whose wallets are therefore not labelled at all). Please confirm or correct the licensed and unlicensed rows (VERIFY.md step 6.4) and tell me which of the unknowns you want decided; for a UAE audience the VARA register is the one that matters.
+
 ## 2026-11-04
 7. Contract senders without a key. `BEHAV_CONTRACT_ADMIN` fires only when the explorer confirms the source is unverified. On a keyless deployment (Blockscout 403 from Railway, no Etherscan key) every contract sender shows "not evaluated" instead. Fine for the pilot, or do you want an info line "sender is a contract, verification unknown" so the operator sees it on the report?
 8. Structuring thresholds are USD 1,000, 3,000, the Travel Rule threshold (953) and 10,000, from the brief. For a UAE exchange audience, should AED 55,000 (the cash reporting line, about USD 15,000) join the list? One number, no scoring change.

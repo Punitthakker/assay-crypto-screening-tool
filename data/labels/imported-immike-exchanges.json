@@ -1,0 +1,388 @@
+[
+ {
+  "address": "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0xf5bec430576ff1b82e44ddb5a1c93f6f9d0884f3",
+  "chainFamily": "evm",
+  "category": "exchange_unlicensed",
+  "name": "YoBit (Yobit.net)",
+  "source": "import:immike-exchanges"
+ },
+ {
+  "address": "0x6cc5f688a315f3dc28a7781717a9a798a59fda7b",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "OKX (Okex 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (OKX Middle East Fintech FZE)"
+ },
+ {
+  "address": "0xd551234ae421e3bcba99a0da6d736074f22192ff",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0x0681d8db095565fe8a346fa0277bffde9c0edbbf",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 4)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0x564286362092d8e7936f0549571a803b203aaced",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 3)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0x60d0cc2ae15859f69bf74dadb8ae3bd58434976b",
+  "chainFamily": "evm",
+  "category": "exchange_unlicensed",
+  "name": "ZB.com (ZB.com)",
+  "source": "import:immike-exchanges"
+ },
+ {
+  "address": "0x5e032243d507c743b061ef021e2ec7fcc6d3ab89",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Upbit (Upbit 3)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration (Dunamu)"
+ },
+ {
+  "address": "0x267be1c1d684f78cb4f6a176c4911b741e4ffdc0",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Kraken (Kraken 4)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "US",
+  "licence": "FinCEN MSB (Payward); MiCA CASP (Ireland)"
+ },
+ {
+  "address": "0x390de26d772d2e2005c6d1d24afc902bae37a4bb",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Upbit (Upbit 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration (Dunamu)"
+ },
+ {
+  "address": "0xba826fec90cefdf6706858e5fbafcb27a290fbe0",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Upbit (Upbit 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration (Dunamu)"
+ },
+ {
+  "address": "0x236f9f97e0e62388479bf9e5ba4889e46b0273c3",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "OKX (Okex 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (OKX Middle East Fintech FZE)"
+ },
+ {
+  "address": "0x00bdb5699745f5b860228c8f939abf1b9ae374ed",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bitstamp (Bitstamp 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "LU",
+  "licence": "CSSF payment institution; MiCA CASP"
+ },
+ {
+  "address": "0xd24400ae8bfebb18ca49be86258a3c749cf46853",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Gemini (Gemini 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "US",
+  "licence": "NYDFS limited purpose trust charter"
+ },
+ {
+  "address": "0x167a9333bf582556f35bd4d16a7e80e191aa6476",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Coinone (Coinone 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x274f3c32c90517975e29dfc209a23f315c1e5fc7",
+  "chainFamily": "evm",
+  "category": "exchange_unlicensed",
+  "name": "Hotbit (Hotbit 1)",
+  "source": "import:immike-exchanges"
+ },
+ {
+  "address": "0x5e575279bf9f4acf0a130c186861454247394c06",
+  "chainFamily": "evm",
+  "category": "exchange_unlicensed",
+  "name": "Liqui (Liqui.io 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "UA"
+ },
+ {
+  "address": "0xa7efae728d2936e78bda97dc267687568dd593f3",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "OKX (Okex 3)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (OKX Middle East Fintech FZE)"
+ },
+ {
+  "address": "0x8271b2e8cbe29396e9563229030c89679b9470db",
+  "chainFamily": "evm",
+  "category": "exchange_unlicensed",
+  "name": "Liqui (Liqui.io 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "UA"
+ },
+ {
+  "address": "0x51836a753e344257b361519e948ffcaf5fb8d521",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Indodax (Indodax 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "ID",
+  "licence": "Bappebti registered physical crypto asset trader"
+ },
+ {
+  "address": "0x3052cd6bf951449a984fe4b5a38b46aef9455c8e",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x88d34944cf554e9cccf4a24292d891f620e9c94f",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x2140efd7ba31169c69dfff6cdc66c542f0211825",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 3)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x2910543af39aba0cd09dbb2d50200b3e800a63d2",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Kraken (Kraken 1)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "US",
+  "licence": "FinCEN MSB (Payward); MiCA CASP (Ireland)"
+ },
+ {
+  "address": "0xfe9e8709d3215310075d67e3ed32a380ccf451c8",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 5)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0xab83d182f3485cf1d6ccdd34c7cfef95b4c08da4",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance JEX)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0x0a869d79a7052c7f1b55a8ebabbea3420f0d1e13",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Kraken (Kraken 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "US",
+  "licence": "FinCEN MSB (Payward); MiCA CASP (Ireland)"
+ },
+ {
+  "address": "0x001866ae5b3de6caa5a51543fd9fb64f524f5478",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 9)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0xf977814e90da44bfa03b6295a0616a897441acec",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 8)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0x15878e87c685f866edfaf454be6dc06fa517b35b",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 7)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0xed48dc0628789c2956b1e41726d062a86ec45bff",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 9)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x31d03f07178bcd74f9099afebd23b0ae30184ab5",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 8)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0xc1da8f69e4881efe341600620268934ef01a3e63",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 5)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0xb4460b75254ce0563bb68ec219208344c7ea838c",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 6)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x0068eb681ec52dbd9944517d785727310b494575",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Tokocrypto (Tokocrypto)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "ID",
+  "licence": "Bappebti registered physical crypto asset trader"
+ },
+ {
+  "address": "0x8533a0bd9310eb63e7cc8e1116c18a3d67b1976a",
+  "chainFamily": "evm",
+  "category": "exchange_unlicensed",
+  "name": "Hotbit (Hotbit 2)",
+  "source": "import:immike-exchanges"
+ },
+ {
+  "address": "0x9cbadd5ce7e14742f70414a6dcbd4e7bb8712719",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Indodax (Indodax 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "ID",
+  "licence": "Bappebti registered physical crypto asset trader"
+ },
+ {
+  "address": "0x4e9ce36e442e55ecd9025b9a6e0d88485d628a67",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 6)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0xbe0eb53f46cd790cd13851d5eff43d12404d33e8",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Binance (Binance 7)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "AE",
+  "licence": "VARA VASP licence (Binance FZE, Dubai)"
+ },
+ {
+  "address": "0xe853c56864a2ebe4576a807d26fdc4a0ada51919",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Kraken (Kraken 3)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "US",
+  "licence": "FinCEN MSB (Payward); MiCA CASP (Ireland)"
+ },
+ {
+  "address": "0xa0ff1e0f30b5dda2dc01e7e828290bc72b71e57d",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 4)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x1e2fcfd26d36183f1a5d90f0e6296915b02bcb40",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Coinone (Coinone 2)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0x186549a4ae594fc1f70ba4cffdac714b405be3f9",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 10)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ },
+ {
+  "address": "0xd273bd546b11bd60214a2f9d71f22a088aafe31b",
+  "chainFamily": "evm",
+  "category": "exchange_licensed",
+  "name": "Bithumb (Bithumb 11)",
+  "source": "import:immike-exchanges",
+  "jurisdiction": "KR",
+  "licence": "FIU VASP registration"
+ }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "address": "0x3ee18B2214AFF97000D974cf647E7C347E8fa585",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Wormhole token bridge (Ethereum)",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Polygon PoS bridge RootChainManager (Ethereum)",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Polygon PoS bridge ERC20 predicate (Ethereum)",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0xa3A7B6F88361F48403514059F1F16C8E78d60EeC",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Arbitrum One L1 ERC20 gateway (Ethereum)",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Optimism L1StandardBridge (Ethereum)",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0x3154Cf16ccdb4C6d922629664174b904d80F2C35",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Base L1StandardBridge (Ethereum)",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0x8EB8a3b98659Cce290402893d0123abb75E3ab28",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Avalanche Bridge (Ethereum side)",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0x6b7a87899490EcE95443e979cA9485CBE7E71522",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "Multichain (Anyswap) router v4, defunct since 2023",
+    "source": "seed:public-explorer-tag; verify tag on etherscan (VERIFY.md step 6)"
+  },
+  {
+    "address": "0x4200000000000000000000000000000000000010",
+    "chainFamily": "evm",
+    "category": "bridge",
+    "name": "OP Stack L2StandardBridge predeploy (Base, OP Mainnet)",
+    "source": "seed:op-stack-predeploy address (same on every OP Stack chain)"
+  }
+]

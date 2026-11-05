@@ -3,13 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.28.0",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "screen": "pnpm --filter @cr/cli screen",
     "verify:sources": "pnpm --filter @cr/cli verify:sources",
     "verify:explorers": "pnpm --filter @cr/cli verify:explorers",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "import:labels": "pnpm --filter @cr/cli import:labels"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

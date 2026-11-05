@@ -1,0 +1,172 @@
+{
+  "immike-forta-phishing": {
+    "url": "https://raw.githubusercontent.com/ImMike/crypto-wallet-address-labels/main/datasets/ethereum-phishing-and-scam-labels/phishing_scams.csv",
+    "licence": "MIT (aggregator) / MIT (Forta Foundation 2022)",
+    "defaultEnabled": true,
+    "fetchedAt": "2026-11-05T02:49:37.096Z",
+    "file": "data/labels/imported-immike-forta-phishing.json",
+    "rows": 6726,
+    "kept": 6205,
+    "skipped": [],
+    "duplicates": 521
+  },
+  "immike-forta-malicious": {
+    "url": "https://raw.githubusercontent.com/ImMike/crypto-wallet-address-labels/main/datasets/ethereum-phishing-and-scam-labels/malicious_smart_contracts.csv",
+    "licence": "MIT (aggregator) / MIT (Forta Foundation 2022)",
+    "defaultEnabled": true,
+    "fetchedAt": "2026-11-05T02:49:37.148Z",
+    "file": "data/labels/imported-immike-forta-malicious.json",
+    "rows": 753,
+    "kept": 756,
+    "skipped": [],
+    "duplicates": 95
+  },
+  "immike-exchanges": {
+    "url": "https://raw.githubusercontent.com/ImMike/crypto-wallet-address-labels/main/datasets/ethereum-exchange-and-dex-labels/exchange.csv",
+    "licence": "MIT (aggregator); upstream blockchain-unit has no licence file, Etherscan public tags",
+    "defaultEnabled": true,
+    "fetchedAt": "2026-11-05T02:49:37.171Z",
+    "file": "data/labels/imported-immike-exchanges.json",
+    "rows": 218,
+    "kept": 44,
+    "skipped": [
+      {
+        "reason": "licence status unknown (bittrex)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (gate)",
+        "count": 3
+      },
+      {
+        "reason": "licence status unknown (poloniex)",
+        "count": 19
+      },
+      {
+        "reason": "licence status unknown (kucoin)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (shapeshift)",
+        "count": 7
+      },
+      {
+        "reason": "licence status unknown (exmo)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (bitfinex)",
+        "count": 3
+      },
+      {
+        "reason": "entity not in data/vasps.json",
+        "count": 86
+      },
+      {
+        "reason": "licence status unknown (hitbtc)",
+        "count": 3
+      },
+      {
+        "reason": "licence status unknown (huobi)",
+        "count": 34
+      },
+      {
+        "reason": "licence status unknown (remitano)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (mexc)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (cryptopia)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (bitmax)",
+        "count": 3
+      },
+      {
+        "reason": "licence status unknown (paribu)",
+        "count": 4
+      }
+    ],
+    "duplicates": 0
+  },
+  "immike-etherclust": {
+    "url": "https://raw.githubusercontent.com/ImMike/crypto-wallet-address-labels/main/datasets/ethereum-cluster-exchange-labels/exchanges.csv",
+    "licence": "MIT (aggregator); upstream etherclust has no licence file located",
+    "defaultEnabled": true,
+    "fetchedAt": "2026-11-05T02:49:37.204Z",
+    "file": "data/labels/imported-immike-etherclust.json",
+    "rows": 243,
+    "kept": 42,
+    "skipped": [
+      {
+        "reason": "entity not in data/vasps.json",
+        "count": 117
+      },
+      {
+        "reason": "licence status unknown (bitfinex)",
+        "count": 6
+      },
+      {
+        "reason": "licence status unknown (bitmax)",
+        "count": 3
+      },
+      {
+        "reason": "licence status unknown (bittrex)",
+        "count": 3
+      },
+      {
+        "reason": "licence status unknown (cryptopia)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (exmo)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (gate)",
+        "count": 3
+      },
+      {
+        "reason": "licence status unknown (hitbtc)",
+        "count": 4
+      },
+      {
+        "reason": "licence status unknown (huobi)",
+        "count": 20
+      },
+      {
+        "reason": "licence status unknown (kucoin)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (mexc)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (paribu)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (poloniex)",
+        "count": 20
+      },
+      {
+        "reason": "licence status unknown (remitano)",
+        "count": 2
+      },
+      {
+        "reason": "licence status unknown (shapeshift)",
+        "count": 7
+      },
+      {
+        "reason": "type wallet is not an exchange",
+        "count": 6
+      }
+    ],
+    "duplicates": 0
+  }
+}

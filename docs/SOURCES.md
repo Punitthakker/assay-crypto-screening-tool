@@ -46,11 +46,12 @@ Status key: VERIFIED (confirmed against issuer source today), LIVE-CHECK (addres
 
 | Source | Location | Licence | Status |
 |---|---|---|---|
-| ImMike/crypto-wallet-address-labels | GitHub | check per file | VERIFIED (exists) - loader in Phase 1, licence audit before production |
-| MetaMask/eth-phishing-detect | GitHub | MIT | OPEN - confirm address list file path |
-| ScamSniffer blacklist | GitHub `scamsniffer/scam-database` | check | OPEN |
-| Mixers (Tornado Cash pools and routers) | OFAC designations 2022 (in the ETH list above) plus `data/labels/mixers.json` | public | VERIFIED via OFAC ETH list |
-| Bridges, DEX routers, exchange hot wallets | `data/labels/*.json` maintained in-repo | own | OPEN - seed in Phase 1 from public explorer tags |
+| ImMike/crypto-wallet-address-labels | GitHub, raw files over raw.githubusercontent.com | MIT (aggregator); forta subsets MIT; blockchain-unit and etherclust upstreams carry no licence file | VERIFIED 2026-11-05 (LICENSE read). Imported by `pnpm import:labels` into `data/labels/imported-immike-*.json`: 6,205 phishing, 756 malicious contracts, 86 exchange wallets gated by `data/vasps.json`. Full table in `docs/LICENCES.md` |
+| MetaMask/eth-phishing-detect | GitHub | DBAD 1.2 (not MIT) | VERIFIED 2026-11-05: domain list only (`src/config.json`), no addresses. Not imported |
+| ScamSniffer blacklist | GitHub `scamsniffer/scam-database` `blacklist/address.json` | GPL-3.0 | VERIFIED 2026-11-05. Opt-in only (`pnpm import:labels -- scamsniffer`, `CR_LABELS_EXTRA_DIR`); upstream froze the address list in 2024-02. Question 9 |
+| Mixers (Tornado Cash pools and routers) | `data/labels/mixers.json` (18 pools) plus the two routers in `seed.json` | Facts from the 2022 OFAC designation, delisted 2025-03 | LIVE-CHECK: confirm each address shows the Tornado.Cash tag on etherscan (VERIFY.md step 6) |
+| Bridges | `data/labels/bridges.json` (9 contracts: Wormhole, Polygon PoS, Arbitrum, Optimism, Base, Avalanche, Multichain, OP Stack predeploy) | Facts | LIVE-CHECK: confirm tags on etherscan (VERIFY.md step 6) |
+| VASP register | `data/vasps.json` (33 entities: status licensed / unlicensed / unknown, jurisdiction, licence) | own | OPEN: statuses remembered from public registers, unverified; question 10 |
 
 ## Chain data
 

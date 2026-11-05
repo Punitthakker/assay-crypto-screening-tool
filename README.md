@@ -21,7 +21,9 @@ Working today, offline against recorded fixtures and online against public RPCs:
 - Behavioural signals (Phase 1b, 2026-11-04): wallet age, transaction count, dormancy then reactivation, pass-through speed, structuring under reporting thresholds, counterparty concentration, unverified contract with an admin, approvals to labelled drainers; `BEHAV_*` evidence capped at 35, a `behaviour` coverage line that names every signal it could not evaluate
 - 2-hop backward trace (Phase 1b, 2026-11-03): every counterparty of the sender, and of their unlabelled counterparties, is checked against labels, OFAC and the issuer freeze list; exposure is value-weighted and hop-decayed into `EXPOSURE_*` evidence per category; licensed exchange wallets end the trace; fan-out cap 25, dust floor, `fund-flow` coverage line, so confidence can now reach `high`
 
-Not yet: label imports and `docs/LICENCES.md` (next), freeze event index, Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
+- Label imports (Phase 1b, 2026-11-05): `pnpm import:labels` pulls MIT-licensed phishing, exploit and exchange labels (ImMike aggregator, Forta, etherclust) into `data/labels/imported-*.json`, 6,479 addresses in the store; `data/vasps.json` decides licensed vs unlicensed exchange wallets; Tornado Cash pools and major bridges seeded; `docs/LICENCES.md` lists every dataset and its licence, GPL ScamSniffer is opt-in only
+
+Not yet: freeze event index (next), Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
 
 ## Run
 
@@ -30,6 +32,7 @@ pnpm install
 pnpm test                                   # fixtures only, no network
 pnpm verify:sources                         # LIVE: checks every contract, oracle and list; writes docs/SOURCES.verified.json
 pnpm verify:explorers                       # LIVE: one inbound-transfer fetch per chain; writes docs/EXPLORERS.verified.json
+pnpm import:labels                          # refresh data/labels/imported-*.json from the public datasets in docs/LICENCES.md (GitHub only, no keys)
 pnpm screen TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t -a USDT                       # Tron inferred
 pnpm screen 0x28C6c06298d514Db089934071355E5743bf21d60 -c ethereum -a USDT
 pnpm screen <addr> -c base -a USDC -m 25000  # amount enables the Travel Rule check
@@ -47,13 +50,13 @@ apps/cli            screen + verify-sources
 packages/shared     chains, tokens, address parsing, zod schemas
 packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, sanctions-oracle, labels, explorer (etherscan-v2, blockscout, routescan, trongrid, tronscan, helius), activity
 packages/engine     scoring, orchestration, 2-hop trace (trace.ts), behavioural signals (behaviour.ts), report
-data/labels         seed labels (json)
+data/labels         seed.json, mixers.json, bridges.json, imported-*.json (pnpm import:labels); data/vasps.json VASP register; data/label-imports.json manifest
 data/fixtures       recorded.json (on-chain responses), ofac-snapshot.json, explorers.json, trace.json and behaviour.json (hand-encoded, build-*.ts)
-docs                SOURCES, REGISTRY, SCORING, DECISIONS, VERIFY, QUESTIONS
+docs                SOURCES, LICENCES, REGISTRY, SCORING, DECISIONS, VERIFY, QUESTIONS
 ```
 
 ## Licences of data used
 
-See `docs/SOURCES.md`. Nothing non-commercial is in the default path. OFAC lists are public domain; the 0xB10C extraction tool is MIT.
+See `docs/LICENCES.md` (every dataset, licence, default or opt-in) and `docs/SOURCES.md`. Nothing non-commercial or copyleft is in the default path. OFAC lists are public domain; the 0xB10C extraction tool is MIT.
 
 Screening support tool. Not legal advice and not a substitute for a regulated entity's AML/CFT programme.

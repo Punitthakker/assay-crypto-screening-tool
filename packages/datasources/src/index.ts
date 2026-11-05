@@ -7,3 +7,4 @@ export * from "./adapters/labels.js";
 export * from "./adapters/explorer.js";
 export * from "./adapters/tx.js";
 export * from "./adapters/activity.js";
+export * from "./adapters/label-import.js";
