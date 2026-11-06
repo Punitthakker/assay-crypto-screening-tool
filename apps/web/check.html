@@ -153,7 +153,7 @@ function renderSources(sources, note) {
   const lines = [""];
   lines.push(`<span class="d">sources  </span>where the sender's inbound funds came from (last 90 days, by value)`);
   if (!sources.length) { lines.push(`<span class="d">         </span>${esc(note)}`); return lines; }
-  const col = s => s.status === "sanctioned" || s.status === "frozen" ? "r" : s.status === "mixer" || s.status === "scam" || s.status === "darknet" ? "r" : s.status === "gambling" || s.status === "unlicensed" ? "a" : s.status === "licensed" ? "g" : "d";
+  const col = s => s.status === "sanctioned" || s.status === "frozen" ? "r" : s.status === "mixer" || s.status === "scam" || s.status === "darknet" ? "r" : s.status === "gambling" || s.status === "unlicensed" || s.status === "previously_frozen" ? "a" : s.status === "licensed" ? "g" : "d";
   for (const s of sources.slice(0, 25)) {
     const pct = (s.share * 100).toFixed(1).padStart(5) + "%";
     const tag = s.status.toUpperCase().padEnd(10);
@@ -169,7 +169,7 @@ function renderTrace(t) {
   const pct = x => (x * 100).toFixed(1) + "%";
   lines.push(`<span class="d">trace    </span>${t.depthReached} of ${t.depthRequested} hops  untraced ${pct(t.untraced)}  licensed boundary ${pct(t.boundary)}${t.dusted ? `  dust ${pct(t.dusted)}` : ""}`);
   const hop2 = t.nodes.filter(n => n.hop === 2);
-  const col = n => n.status === "sanctioned" || n.status === "frozen" || n.status === "mixer" || n.status === "scam" || n.status === "darknet" ? "r" : n.status === "gambling" || n.status === "unlicensed_vasp" || n.status === "bridge_in" ? "a" : n.status === "licensed_vasp" ? "g" : "d";
+  const col = n => n.status === "sanctioned" || n.status === "frozen" || n.status === "mixer" || n.status === "scam" || n.status === "darknet" ? "r" : n.status === "gambling" || n.status === "unlicensed_vasp" || n.status === "bridge_in" || n.status === "previously_frozen" ? "a" : n.status === "licensed_vasp" ? "g" : "d";
   for (const n of hop2.filter(n => n.status !== "unlabelled" && n.status !== "internal").slice(0, 25)) {
     lines.push(`<span class="${col(n)}">${n.status.toUpperCase().padEnd(14)}</span> hop 2  ${pct(n.weight).padStart(6)} of value  ${esc(short(n.address))}${n.label ? ` ${esc(n.label.name)}` : ""}  <span class="d">paid ${esc(short(n.paid))}${n.txHashes[0] ? `  tx ${esc(short(n.txHashes[0]))}` : ""}</span>`);
   }

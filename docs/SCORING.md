@@ -1,4 +1,6 @@
-# Scoring model v1 (scoring_version 1.0.0) - proposal for review
+# Scoring model v1 (scoring_version 1.1.0) - proposal for review
+
+Version history: 1.0.0 (2026-11-01) weights, caps and bands as below. 1.1.0 (2026-11-06) adds the sender-level "previously frozen" row (20 points at hop 0, `EXPOSURE_DIRECT_PREVIOUSLY_FROZEN`); no other weight or band changed.
 
 Risk score 0 to 100, higher is worse. Bands: CLEAR 0-19, LOW 20-39, CAUTION 40-59, HIGH 60-79, BLOCK 80-100. Deterministic: same inputs and same list snapshots give the same score.
 
@@ -33,6 +35,7 @@ For every inbound transfer within the trace window (default: last 90 days or las
 | unlicensed or FATF-grey-list VASP | 20 | 20 |
 | bridge-in from unknown origin chain | 10 | 10 |
 | fresh wallet (< 7 days, < 5 tx) as counterparty | 8 | 15 |
+| the sender itself previously frozen by the issuer, now released (hop 0, from the freeze event index) | 20 | 20 |
 
 Points scale linearly with share, with a floor: any non-zero exposure to `sanctioned`, `mixer` or `frozen` contributes at least 8 points even at dust share (dust rule). Exposure total is capped at 85.
 
@@ -42,10 +45,10 @@ Implemented 2026-11-03 (`packages/engine/src/trace.ts`), as specified above with
 
 - Share of a hop-2 node = (its share of the hop-1 wallet's inbound) x (that wallet's share of the sender's inbound), then x 0.5. Shares per category are summed across nodes and capped at 1 before mapping to points.
 - A labelled, frozen or sanctioned counterparty contributes and is not expanded further; only unlabelled wallets are expanded. Loops back to the sender or to another hop-1 wallet are `internal` and counted once.
-- Counterparty classification order: OFAC list or `sanctioned` label, then issuer freeze read, then label category. The sanctions oracle is not called per counterparty.
+- Counterparty classification order: OFAC list or `sanctioned` label, then issuer freeze read, then label category, then the freeze event index (`previously frozen` for an otherwise unlabelled wallet the issuer once blacklisted and released). The sanctions oracle is not called per counterparty.
 - Dust floor: a counterparty whose transfers total under 1 token unit (`CR_TRACE_DUST`) is dropped before fan-out, so dusting from a tainted address creates no exposure. The 8-point dust rule applies to every counterparty that is kept.
 - Freeze reads are capped at 50 per trace (`CR_TRACE_FREEZE_CAP`), largest counterparties first; beyond the cap `frozen` is null and the node is classified by label and list only.
-- `previously frozen` and `fresh wallet` categories are defined but cannot fire until the freeze event index and the behavioural signals land.
+- `previously frozen` (2026-11-06): fires from the local freeze event index (`data/freeze-index`, built by `pnpm index:freeze` from the issuer contracts' own `AddedBlackList` / `RemovedBlackList` / `DestroyedBlackFunds` and `Blacklisted` / `UnBlacklisted` logs). A counterparty with an add and a later remove is `previously_frozen` at 20 points x share; when the live freeze read is unavailable and the index still lists the address with no removal, the node counts as `frozen` (60) because the index is the issuer's own record, at most a day behind. The sender itself, released, scores the hop-0 row above; a sender whose live read failed while the index still lists it gets an info line and the `FREEZE_INDEX_SAYS_LISTED` flag, no points (question 11). Solana has no freeze log (per token account), so the category never fires there. A missing index is `freeze-index: unavailable` in coverage and does not lower confidence. `fresh wallet` as an exposure category still waits on counterparty activity reads.
 - Evidence: one `EXPOSURE_<CATEGORY>` line per category, `hop` = the nearest hop that contributed, `ref` = the largest contributor's tx hash, summary names up to three contributors. Plus one `FLOW_TRACE` info line with the counts.
 
 ### 2b. Behavioural (sender itself)

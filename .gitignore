@@ -9,3 +9,4 @@ docs/SOURCES.verified.json
 .netlify
 docs/EXPLORERS.verified.json
 data/labels-optional/
+data/freeze-index/

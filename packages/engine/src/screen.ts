@@ -19,6 +19,7 @@ import {
 import {
   ActivityAdapter,
   ExplorerRouter,
+  FreezeIndex,
   IssuerFreezeAdapter,
   LabelStore,
   OfacAdapter,
@@ -46,6 +47,8 @@ export interface EngineOptions {
   trace?: Partial<TraceOptions>;
   /** behavioural signal thresholds; false skips the activity and outbound fetches (CR_BEHAVIOUR=0 does the same) */
   behaviour?: Partial<BehaviourOptions> | false;
+  /** historic freeze event index (data/freeze-index by default, built by pnpm index:freeze); false switches "previously frozen" off */
+  freezeIndex?: FreezeIndex | false;
 }
 
 export class Engine {
@@ -58,6 +61,7 @@ export class Engine {
   private traceOpts: TraceOptions;
   private activity: ActivityAdapter;
   private behaviourOpts: BehaviourOptions | false;
+  private freezeIndex: FreezeIndex | undefined;
 
   constructor(private opts: EngineOptions) {
     this.ofac = new OfacAdapter(opts.transport);
@@ -70,6 +74,7 @@ export class Engine {
     this.activity = new ActivityAdapter(opts.transport, opts.env ?? process.env);
     const env = opts.env ?? process.env;
     this.behaviourOpts = opts.behaviour === false || env.CR_BEHAVIOUR === "0" ? false : { ...DEFAULT_BEHAVIOUR, structuringThresholds: [...new Set([1000, 3000, this.threshold, 10000])], ...(opts.behaviour ?? {}) };
+    this.freezeIndex = opts.freezeIndex === false || env.CR_FREEZE_INDEX === "0" ? undefined : (opts.freezeIndex ?? new FreezeIndex(env.CR_FREEZE_INDEX_DIR ? { dir: env.CR_FREEZE_INDEX_DIR } : {}));
   }
 
   /** Real adapters behind the tracer: explorer for hop 2, labels, the OFAC set, issuer freeze reads. */
@@ -88,6 +93,64 @@ export class Engine {
         const r = await this.freeze.screen(address, token);
         return typeof r.facts?.frozen === "boolean" ? r.facts.frozen : null;
       },
+      history: (address, token) => this.freezeIndex?.history(address, token) ?? null,
+    };
+  }
+
+  /**
+   * The sender's own freeze history (SCORING.md 2a, "previously frozen" at hop 0). A currently
+   * frozen sender is already a hard block; this only speaks when the live read says not frozen
+   * (previously frozen, 20 points) or could not answer while the index still lists it (flag only,
+   * no points: the index may be a day behind the chain).
+   */
+  private senderFreezeHistory(address: string, token: TokenDef, frozenNow: boolean | null, checkedAt: string): { evidence: Evidence[]; coverage: Coverage; flags: string[] } {
+    const src = "freeze-index";
+    if (!this.freezeIndex) return { evidence: [], coverage: { source: src, status: "disabled", detail: "freeze event index switched off" }, flags: [] };
+    const cov = this.freezeIndex.coverage(token);
+    if (!cov.indexed) {
+      const applicable = cov.reason?.startsWith("no freeze index");
+      return { evidence: [], coverage: { source: src, status: applicable ? "unavailable" : "not_applicable", detail: cov.reason ?? "" }, flags: [] };
+    }
+    const coverage: Coverage = { source: src, status: "ok", detail: `${cov.events} events via ${cov.provider}, updated ${cov.updatedAt}`, ...(cov.ageHours !== undefined ? { ageHours: cov.ageHours } : {}) };
+    const h = this.freezeIndex.history(address, token);
+    if (!h || !h.everFrozen || frozenNow === true) return { evidence: [], coverage, flags: [] };
+    const when = (t: number) => (t ? new Date(t * 1000).toISOString().slice(0, 10) : "unknown date");
+    const last = h.events[h.events.length - 1];
+    const destroyed = h.destroyed ? `; ${h.destroyed} DestroyedBlackFunds event${h.destroyed === 1 ? "" : "s"} (${(Number(h.destroyedBase) / 10 ** token.decimals).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${token.onChainSymbol} burned)` : "";
+    if (frozenNow === false || (frozenNow === null && !h.listedPerIndex)) {
+      return {
+        evidence: [
+          {
+            code: "EXPOSURE_DIRECT_PREVIOUSLY_FROZEN",
+            source: src,
+            severity: "risk",
+            points: 20,
+            hop: 0,
+            summary: `Sender was blacklisted by ${token.issuer} for ${token.onChainSymbol} on ${token.chain} on ${when(h.firstFrozenAt)} and released on ${when(h.releasedAt ?? 0)} (${h.added} add, ${h.removed} remove${destroyed}). Not frozen now.`,
+            ...(last ? { ref: last.txHash } : {}),
+            checkedAt,
+          },
+        ],
+        coverage,
+        flags: [],
+      };
+    }
+    // live read unavailable, index says still listed
+    return {
+      evidence: [
+        {
+          code: "FREEZE_LISTED_PER_INDEX",
+          source: src,
+          severity: "info",
+          points: 0,
+          hop: 0,
+          summary: `Issuer freeze read failed, but the local freeze index last saw ${token.issuer} blacklist this address on ${when(h.firstFrozenAt)} with no later removal (index updated ${h.indexUpdatedAt.slice(0, 10)}). Treat as frozen until the live read answers.`,
+          ...(last ? { ref: last.txHash } : {}),
+          checkedAt,
+        },
+      ],
+      coverage,
+      flags: ["FREEZE_INDEX_SAYS_LISTED"],
     };
   }
 
@@ -124,6 +187,13 @@ export class Engine {
       if (!r) continue;
       evidence.push(...r.evidence);
       coverage.push(r.coverage);
+    }
+    // 2b. the sender's own freeze history from the local index
+    if (token) {
+      const fh = this.senderFreezeHistory(req.address, token, typeof freezeR?.facts?.frozen === "boolean" ? freezeR.facts.frozen : null, checkedAt);
+      evidence.push(...fh.evidence);
+      coverage.push(fh.coverage);
+      flags.push(...fh.flags);
     }
     // sanctions sources disagreement
     const listHit = ofacR.facts?.sanctioned === true;

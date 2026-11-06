@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canonicalToken } from "@cr/shared";
-import { defaultWindow, type InboundTransfersResult, type Label, type Transfer } from "@cr/datasources";
+import { defaultWindow, type FreezeHistory, type InboundTransfersResult, type Label, type Transfer } from "@cr/datasources";
 import { DEFAULT_TRACE, Tracer, traceOptionsFromEnv, type TraceDeps } from "./trace.js";
 import { computeConfidence, computeScore } from "./score.js";
 
@@ -212,3 +212,51 @@ describe("traceOptionsFromEnv", () => {
 });
 
 const ok = (source: string) => ({ source, status: "ok" as const });
+
+describe("Tracer: previously frozen from the freeze event index", () => {
+  const PREV = "0x9E00000000000000000000000000000000000000";
+  const hist = (over: Partial<FreezeHistory>): FreezeHistory => ({ everFrozen: true, listedPerIndex: false, firstFrozenAt: 1_700_000_000, releasedAt: 1_700_200_000, destroyedBase: "0", added: 1, removed: 1, destroyed: 0, events: [], indexUpdatedAt: "2026-11-05T00:00:00.000Z", ...over });
+
+  it("a released counterparty at hop 1 scores 20 x share and carries its history on the node", async () => {
+    const d = deps({}, { history: (a) => (a.toLowerCase() === PREV.toLowerCase() ? hist({}) : { ...hist({}), everFrozen: false, added: 0, removed: 0 }) });
+    const r = await run({}, [tx(PREV, S, 400), tx(A, S, 600)], DEFAULT_TRACE, d);
+    expect(r.exposure.previously_frozen).toBeCloseTo(0.4, 5);
+    const ev = r.evidence.find((e) => e.code === "EXPOSURE_PREVIOUSLY_FROZEN")!;
+    expect(ev.points).toBe(8);
+    expect(ev.hop).toBe(1);
+    expect(ev.summary).toContain("previously frozen by the issuer");
+    const node = r.nodes.find((n) => n.address === PREV)!;
+    expect(node.status).toBe("previously_frozen");
+    expect(node.frozen).toBe(false);
+    expect(node.freezeHistory).toEqual({ added: 1, removed: 1, destroyed: 0, firstFrozenAt: 1_700_000_000, releasedAt: 1_700_200_000, listedPerIndex: false });
+    expect(node.expanded).toBe("not_needed"); // classified, not expanded
+    expect(d.fetches).toEqual([A]);
+  });
+
+  it("the live read wins: currently frozen stays frozen, and no index means unlabelled", async () => {
+    const d1 = deps({}, { history: () => hist({ listedPerIndex: true, removed: 0 }) });
+    const r1 = await run({}, [tx(FROZEN, S, 100)], { ...DEFAULT_TRACE, depth: 1 }, d1);
+    expect(r1.nodes[0]!.status).toBe("frozen");
+    expect(r1.exposure.previously_frozen).toBeUndefined();
+    const d2 = deps({}, { history: () => null });
+    const r2 = await run({}, [tx(A, S, 100)], { ...DEFAULT_TRACE, depth: 1 }, d2);
+    expect(r2.nodes[0]!.status).toBe("unlabelled");
+    expect(r2.nodes[0]!.freezeHistory).toBeUndefined();
+  });
+
+  it("when the freeze read is unavailable and the index still lists the address, it counts as frozen", async () => {
+    const d = deps({}, { frozen: async () => null, history: (a) => (a.toLowerCase() === PREV.toLowerCase() ? hist({ listedPerIndex: true, removed: 0 }) : null) });
+    const r = await run({}, [tx(PREV, S, 100)], { ...DEFAULT_TRACE, depth: 1 }, d);
+    expect(r.nodes[0]!.status).toBe("frozen");
+    expect(r.nodes[0]!.frozen).toBeNull();
+    expect(r.nodes[0]!.freezeHistory?.listedPerIndex).toBe(true);
+    expect(r.evidence.find((e) => e.code === "EXPOSURE_FROZEN")?.points).toBe(60);
+  });
+
+  it("a labelled counterparty keeps its label category even with a freeze history", async () => {
+    const d = deps({}, { history: () => hist({}) });
+    const r = await run({}, [tx(SCAM, S, 100)], { ...DEFAULT_TRACE, depth: 1 }, d);
+    expect(r.nodes[0]!.status).toBe("scam");
+    expect(r.nodes[0]!.freezeHistory?.added).toBe(1);
+  });
+});

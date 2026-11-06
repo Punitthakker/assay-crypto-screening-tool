@@ -1,7 +1,8 @@
 import { describe, expect, it, beforeAll } from "vitest";
 import path from "node:path";
 import { Engine } from "./screen.js";
-import { FixtureTransport, LabelStore } from "@cr/datasources";
+import { FixtureTransport, FreezeIndex, LabelStore, emptyIndex } from "@cr/datasources";
+import { canonicalToken } from "@cr/shared";
 
 const root = path.resolve(import.meta.dirname, "../../..");
 let engine: Engine;
@@ -80,6 +81,78 @@ describe("2-hop trace end to end (data/fixtures/trace.json)", () => {
     const e = new Engine({ transport, labels: new LabelStore(path.join(root, "data/labels")), explorer: false });
     const r = await e.screen({ address: "0x1111111111111111111111111111111111111111", chain: "base", asset: "USDC" });
     expect(r.coverage.find((c) => c.source === "explorer")).toBeUndefined();
+  });
+});
+
+describe("freeze event index end to end (data/fixtures/freeze-index)", () => {
+  const NOW = Date.UTC(2026, 10, 2);
+  const SENDER = "0x5e0d000000000000000000000000000000000001";
+  const B = "0xb1b1000000000000000000000000000000000003";
+  const mk = (over: Partial<ConstructorParameters<typeof Engine>[0]> = {}) =>
+    new Engine({
+      transport: new FixtureTransport(path.join(root, "data/fixtures/trace.json")),
+      labels: new LabelStore(path.join(root, "data/labels")),
+      env: { ETHERSCAN_API_KEY: "test" },
+      window: { nowMs: NOW },
+      freezeIndex: new FreezeIndex({ dir: path.join(root, "data/fixtures/freeze-index"), nowMs: NOW }),
+      ...over,
+    });
+
+  it("a released hop-2 wallet adds EXPOSURE_PREVIOUSLY_FROZEN at 20 x its decayed share on top of example 3", async () => {
+    const { report: r, trace } = await mk().screenWithFlow({ address: SENDER, chain: "ethereum", asset: "USDT" });
+    const ev = r.evidence.find((e) => e.code === "EXPOSURE_PREVIOUSLY_FROZEN")!;
+    expect(ev.hop).toBe(2);
+    expect(ev.points).toBe(5.9); // (1000/1500) x (880/1000) x 0.5 = 0.2933 x 20
+    expect(ev.summary).toContain("previously frozen by the issuer");
+    expect(r.score).toBe(14); // mixer floor 8 + 5.9
+    expect(r.verdict).toBe("CLEAR");
+    expect(r.confidence).toBe("high");
+    const node = trace?.nodes.find((n) => n.address.toLowerCase() === B)!;
+    expect(node.status).toBe("previously_frozen");
+    expect(node.frozen).toBe(false);
+    expect(node.freezeHistory?.releasedAt).toBe(1_739_145_600);
+    const cov = r.coverage.find((c) => c.source === "freeze-index")!;
+    expect(cov.status).toBe("ok");
+    expect(cov.detail).toContain("2 events via fixture");
+    expect(cov.ageHours).toBe(24);
+  });
+
+  it("a sender the issuer once froze and released gets EXPOSURE_DIRECT_PREVIOUSLY_FROZEN, 20 points at hop 0", async () => {
+    const USDT = canonicalToken("ethereum", "USDT")!;
+    const index = new FreezeIndex({
+      files: [{ ...emptyIndex(USDT, "test"), updatedAt: "2026-11-01T00:00:00.000Z", cursor: { block: 1 }, events: [
+        { type: "added", address: SENDER, block: 1, timestamp: 1_735_689_600, txHash: "0xs1" },
+        { type: "destroyed", address: SENDER, block: 2, timestamp: 1_735_776_000, txHash: "0xs2", amountBase: "250000000" },
+        { type: "removed", address: SENDER, block: 3, timestamp: 1_739_145_600, txHash: "0xs3" },
+      ] }],
+      nowMs: NOW,
+    });
+    const r = await mk({ freezeIndex: index }).screen({ address: SENDER, chain: "ethereum", asset: "USDT" });
+    const ev = r.evidence.find((e) => e.code === "EXPOSURE_DIRECT_PREVIOUSLY_FROZEN")!;
+    expect(ev.points).toBe(20);
+    expect(ev.hop).toBe(0);
+    expect(ev.ref).toBe("0xs3");
+    expect(ev.summary).toBe("Sender was blacklisted by Tether for USDT on ethereum on 2025-01-01 and released on 2025-02-10 (1 add, 1 remove; 1 DestroyedBlackFunds event (250 USDT burned)). Not frozen now.");
+    expect(r.score).toBe(28); // 20 + mixer floor 8
+    expect(r.verdict).toBe("LOW");
+    expect(r.hardBlock).toBeUndefined();
+  });
+
+  it("a currently frozen sender is still a hard block and gets no history line", async () => {
+    const r = await mk({ transport: new FixtureTransport(path.join(root, "data/fixtures/recorded.json")) }).screen({ address: "0x28C6c06298d514Db089934071355E5743bf21d60", chain: "ethereum", asset: "USDT" });
+    expect(r.hardBlock).toBe("HB_FROZEN");
+    expect(r.evidence.find((e) => e.code.includes("PREVIOUSLY_FROZEN"))).toBeUndefined();
+  });
+
+  it("without an index the coverage line says so and nothing is scored; Solana is not applicable", async () => {
+    const r = await mk({ freezeIndex: new FreezeIndex("/nonexistent") }).screen({ address: SENDER, chain: "ethereum", asset: "USDT" });
+    expect(r.coverage.find((c) => c.source === "freeze-index")).toEqual({ source: "freeze-index", status: "unavailable", detail: "no freeze index for USDT on ethereum; run pnpm index:freeze" });
+    expect(r.score).toBe(8);
+    expect(r.confidence).toBe("high"); // the index is a bonus signal, not a confidence requirement
+    const sol = await engine.screen({ address: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin", chain: "solana", asset: "USDC" });
+    expect(sol.coverage.find((c) => c.source === "freeze-index")?.status).toBe("not_applicable");
+    const off = await mk({ freezeIndex: false }).screen({ address: SENDER, chain: "ethereum", asset: "USDT" });
+    expect(off.coverage.find((c) => c.source === "freeze-index")?.status).toBe("disabled");
   });
 });
 

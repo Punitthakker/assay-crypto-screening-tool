@@ -12,7 +12,8 @@
     "verify:explorers": "pnpm --filter @cr/cli verify:explorers",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "import:labels": "pnpm --filter @cr/cli import:labels"
+    "import:labels": "pnpm --filter @cr/cli import:labels",
+    "index:freeze": "pnpm --filter @cr/cli index:freeze"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -13,7 +13,7 @@ One item per daily build. The scheduled task "Assay daily build" picks the first
 - [x] 2-hop backward trace, value-weighted and hop-decayed exposure, fan-out cap 25, licensed exchange boundary, dust floor, fund-flow coverage line - shipped 2026-11-03, live check pending (docs/VERIFY.md step 4)
 - [x] Behavioural signals (BEHAV_*): wallet age, tx count, dormancy, pass-through, structuring, concentration, contract-with-admin, drainer approvals - shipped 2026-11-04, live check pending (docs/VERIFY.md step 5)
 - [x] Label import scripts (ImMike, eth-phishing-detect, ScamSniffer), mixers, bridges, data/vasps.json, docs/LICENCES.md - shipped 2026-11-05; eth-phishing-detect has no address list (domains only), ScamSniffer is GPL and opt-in (question 9); mixer, bridge and VASP rows need Punit's confirmation (docs/VERIFY.md step 6, question 10)
-- [ ] Historic freeze event index ("previously frozen")
+- [x] Historic freeze event index ("previously frozen") - shipped 2026-11-06, index must be built live (docs/VERIFY.md step 7), scoring 1.1.0
 - [ ] Watchman identity-layer integration via docker-compose (submodule modules/moneybee-risk-datasources)
 - [ ] Telegram bot (grammY) in apps/bot
 

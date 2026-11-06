@@ -51,7 +51,7 @@ export interface Source {
   sanctioned: boolean | null;
   frozen: boolean | null;
   /** worst of: sanctioned, frozen, label category */
-  status: "sanctioned" | "frozen" | "mixer" | "scam" | "darknet" | "gambling" | "unlicensed" | "licensed" | "unlabelled";
+  status: "sanctioned" | "frozen" | "mixer" | "scam" | "darknet" | "gambling" | "unlicensed" | "licensed" | "previously_frozen" | "unlabelled";
   txHashes: string[];
 }
 
@@ -259,10 +259,12 @@ export class TxScreener {
       let sanctioned: boolean | null = null;
       let frozen: boolean | null = null;
       const node = traced.get(normalizeAddress(r.address, fam));
+      const previouslyFrozen = node ? node.status === "previously_frozen" : false;
       if (node) {
         sanctioned = node.sanctioned;
         frozen = node.frozen;
         if (label?.category === "sanctioned") sanctioned = true;
+        if (node.status === "frozen") frozen = true; // the index can say frozen when the live read did not answer
       } else if (checked) {
         sanctioned = ofacSet ? ofacSet.has(normalizeAddress(r.address, fam)) : null;
         if (label?.category === "sanctioned") sanctioned = true;
@@ -285,7 +287,9 @@ export class TxScreener {
                     ? "unlicensed"
                     : label?.category === "exchange_licensed"
                       ? "licensed"
-                      : "unlabelled";
+                      : previouslyFrozen
+                        ? "previously_frozen"
+                        : "unlabelled";
       out.push({
         address: r.address,
         share: grand > 0 ? Math.round((r.total / grand) * 10000) / 10000 : 0,

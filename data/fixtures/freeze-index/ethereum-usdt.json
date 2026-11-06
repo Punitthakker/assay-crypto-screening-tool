@@ -1,0 +1,27 @@
+{
+ "chain": "ethereum",
+ "token": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+ "symbol": "USDT",
+ "issuer": "Tether",
+ "provider": "fixture",
+ "cursor": {
+  "block": 21500000
+ },
+ "updatedAt": "2026-11-01T00:00:00.000Z",
+ "events": [
+  {
+   "type": "added",
+   "address": "0xb1b1000000000000000000000000000000000003",
+   "block": 21000000,
+   "timestamp": 1735689600,
+   "txHash": "0xf2ee5e01"
+  },
+  {
+   "type": "removed",
+   "address": "0xb1b1000000000000000000000000000000000003",
+   "block": 21300000,
+   "timestamp": 1739145600,
+   "txHash": "0xf2ee5e02"
+  }
+ ]
+}

@@ -1,5 +1,5 @@
 import { getChain, normalizeAddress, type Coverage, type Evidence, type TokenDef } from "@cr/shared";
-import type { InboundTransfersResult, Label, LabelCategory, Transfer, TransferWindow } from "@cr/datasources";
+import type { FreezeHistory, InboundTransfersResult, Label, LabelCategory, Transfer, TransferWindow } from "@cr/datasources";
 
 /**
  * Backward fund-flow trace: who paid the sender, and who paid them.
@@ -14,6 +14,10 @@ import type { InboundTransfersResult, Label, LabelCategory, Transfer, TransferWi
  * Boundaries (SCORING.md 2a): a licensed exchange terminates the branch at 0 points,
  * a labelled or frozen or sanctioned counterparty contributes and is not expanded,
  * value beyond the fan-out cap is `untraced` and lowers confidence, not the score.
+ *
+ * "Previously frozen" comes from the local freeze event index (data/freeze-index): an
+ * unlabelled counterparty the issuer once blacklisted and later released. When the live
+ * freeze read is unavailable and the index still lists the address, it counts as frozen.
  */
 
 export type ExposureCategory =
@@ -96,6 +100,8 @@ export interface TraceNode {
   label?: { name: string; category: LabelCategory; jurisdiction?: string };
   sanctioned: boolean | null;
   frozen: boolean | null;
+  /** from the freeze event index, when the token is indexed and the address appears in it */
+  freezeHistory?: { added: number; removed: number; destroyed: number; firstFrozenAt: number; releasedAt?: number; listedPerIndex: boolean };
   /** hop-1 only: whether its own inbound was fetched for the next hop */
   expanded?: "yes" | "no_explorer" | "beyond_cap" | "not_needed";
 }
@@ -125,6 +131,8 @@ export interface TraceDeps {
   sanctioned(address: string): Promise<boolean | null>;
   /** null when the read is unavailable or not applicable */
   frozen(address: string, token: TokenDef): Promise<boolean | null>;
+  /** freeze event history from the local index; null when the token is not indexed. Optional: tests and old wiring omit it. */
+  history?(address: string, token: TokenDef): FreezeHistory | null;
 }
 
 interface Agg {
@@ -149,9 +157,11 @@ function aggregate(transfers: Transfer[], exclude: Set<string>, fam: ReturnType<
   return { rows, total: rows.reduce((s, r) => s + r.value, 0) };
 }
 
-function categoryOf(label: Label | undefined, sanctioned: boolean | null, frozen: boolean | null): NodeStatus {
+function categoryOf(label: Label | undefined, sanctioned: boolean | null, frozen: boolean | null, history: FreezeHistory | null): NodeStatus {
   if (sanctioned || label?.category === "sanctioned") return "sanctioned";
   if (frozen) return "frozen";
+  // the live read failed but the index still lists the address: the issuer's own record, possibly a day old
+  if (frozen === null && history?.listedPerIndex) return "frozen";
   switch (label?.category) {
     case "mixer":
       return "mixer";
@@ -168,7 +178,7 @@ function categoryOf(label: Label | undefined, sanctioned: boolean | null, frozen
     case "exchange_licensed":
       return "licensed_vasp";
     default:
-      return "unlabelled";
+      return history?.everFrozen ? "previously_frozen" : "unlabelled";
   }
 }
 
@@ -212,7 +222,8 @@ export class Tracer {
         freezeReads++;
         frozen = await this.deps.frozen(address, token);
       }
-      const status = categoryOf(label, sanctioned, frozen);
+      const history = this.deps.history?.(address, token) ?? null;
+      const status = categoryOf(label, sanctioned, frozen, history);
       const node: TraceNode = {
         address,
         hop,
@@ -225,6 +236,9 @@ export class Tracer {
         ...(label ? { label: { name: label.name, category: label.category, ...(label.jurisdiction ? { jurisdiction: label.jurisdiction } : {}) } } : {}),
         sanctioned,
         frozen,
+        ...(history?.everFrozen
+          ? { freezeHistory: { added: history.added, removed: history.removed, destroyed: history.destroyed, firstFrozenAt: history.firstFrozenAt, ...(history.releasedAt !== undefined ? { releasedAt: history.releasedAt } : {}), listedPerIndex: history.listedPerIndex } }
+          : {}),
       };
       nodes.push(node);
       return node;

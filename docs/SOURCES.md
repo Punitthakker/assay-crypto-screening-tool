@@ -30,6 +30,15 @@ Status key: VERIFIED (confirmed against issuer source today), LIVE-CHECK (addres
 - `0x28C6c06298d514Db089934071355E5743bf21d60` (Binance 14) is blacklisted by both Tether and Circle following the 2026 Binance hot-wallet hack. Public label databases still tag it as a Binance hot wallet. The engine returns BLOCK; the label is kept for context only.
 - `eth.llamarpc.com` returned HTML and `cloudflare-eth.com` returned internal errors; both removed from the rotation. `publicnode` and `1rpc` agree on every control.
 
+## Issuer freeze events (historic index, added 2026-11-06)
+
+| Issuer | Events | Address field | Provider | Status |
+|---|---|---|---|---|
+| Tether (TetherToken, Ethereum, Avalanche, Tron) | `AddedBlackList(address)`, `RemovedBlackList(address)`, `DestroyedBlackFunds(address,uint256)` | not indexed, first word of `data` | Etherscan V2 `getLogs`, Blockscout `/api`, TronGrid `/v1/contracts/{c}/events` | FIXTURE-TESTED, live check VERIFY.md step 7. Topic hashes computed from the signatures with viem |
+| Circle (FiatToken, Ethereum, Base, Arbitrum, Polygon, Avalanche, Optimism) | `Blacklisted(address indexed)`, `UnBlacklisted(address indexed)` | `topics[1]` | same | FIXTURE-TESTED, live check VERIFY.md step 7 |
+| Solana (SPL) | none; `FreezeAccount` / `ThawAccount` are instructions on the token account | - | - | N/A, live read only |
+| USDT0 (Arbitrum, Polygon), Binance-Peg (BNB) | unknown / none | - | - | skipped until the freeze method is confirmed |
+
 ## Sanctions
 
 | Source | Endpoint / contract | Status | Note |
