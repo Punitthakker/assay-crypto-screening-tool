@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.8.1 - 2026-11-07
+- `docs/HANDOVER.md`: state of the product when the daily build was stopped, what is live (Netlify redeployed today from `apps/web`; Railway staged changes waiting for Deploy: `assay-api` on branch `main`, new `watchman` service, `WATCHMAN_URL`), what has never run live, open questions, how to resume.
+
 ## 0.8.0 - 2026-11-07
 - Identity layer (`packages/datasources/src/adapters/watchman.ts`): originator name screening through a self-hosted moov-io/watchman (Apache-2.0) over its v2 HTTP API, behind `Transport.fetchJson` like every other adapter, so it records and replays. Person queries send name, date of birth and `gov_national` (COUNTRY:ID); legal persons send name only (type `business`). `/v2/listinfo` reports the loaded lists. Off until `WATCHMAN_URL` is set; `WATCHMAN_MIN_MATCH` (0.80), `WATCHMAN_REVIEW_MATCH` (0.59) and `WATCHMAN_LIMIT` tune it.
 - Engine: the originator screen runs in parallel with the freeze, OFAC and oracle reads, so `HB_ORIGINATOR_SANCTIONED` (SCORING.md 2d) is a hard block that also skips the trace. `IDENTITY_PEP` (+15) for hits on a PEP-named list, `IDENTITY_NAME_REVIEW` plus flag `ORIGINATOR_NAME_REVIEW` (info, no points) for a near miss between the review and match lines, `IDENTITY_NAME_CLEAR` otherwise. New `watchman` coverage line, present only when an originator was supplied: `ok`, `disabled` (stated, no confidence change), `unavailable` (confidence capped at medium). The Phase 1a placeholder line "name screening lands in Phase 1b" is gone.

@@ -26,7 +26,7 @@ Working today, offline against recorded fixtures and online against public RPCs:
 
 - Identity layer (Phase 1b, 2026-11-07): originator name screening through a self-hosted moov-io/watchman (`docker compose up -d watchman`, `WATCHMAN_URL`), OFAC, US CSL, EU, UK and UN lists; `HB_ORIGINATOR_SANCTIONED` at or above the 0.80 match line, `IDENTITY_PEP` on PEP lists, a stated near-miss review band, `watchman` coverage line; `pnpm screen ... -o "<name>" --dob <date>`, `originator` on `POST /v1/screen`, `pnpm verify:watchman`
 
-Not yet: Telegram bot (next, Phase 1b), web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
+Not yet: Telegram bot (next, Phase 1b). Daily build paused 2026-11-07; `docs/HANDOVER.md` has the live state, the pending Railway deploy and how to resume, web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
 
 ## Run
 

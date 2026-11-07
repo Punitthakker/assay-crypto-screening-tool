@@ -1,6 +1,6 @@
 # Roadmap
 
-One item per daily build. The scheduled task "Assay daily build" picks the first unchecked item, ships it with tests, marks it done here, and reports.
+One item per daily build. The scheduled task "Assay daily build" picked the first unchecked item, shipped it with tests, marked it done here, and reported. The schedule was stopped on 2026-11-07 after the Watchman item; see `docs/HANDOVER.md` for the state at that point and how to resume.
 
 ## Phase 1a - shipped 2026-11-01
 - [x] Registry, issuer freeze, OFAC + oracle sanctions, asset authenticity, labels seed, Travel Rule floor, scoring v1, CLI, fixtures, brand, product page
