@@ -37,9 +37,10 @@ Keys that unlock coverage: `ETHERSCAN_API_KEY` (every EVM chain, BNB has no othe
 
 14 questions, 1 answered. The ones that change behaviour: 5 (trace cost cap on Railway), 6 (indirect exposure can reach BLOCK by arithmetic), 9 (GPL ScamSniffer stays off), 10 (VASP licence statuses are from memory and gate the trace boundary), 11 and 12 (freeze index policy and whether to commit it), 13 (Watchman match line 0.80 or 0.59 for the pilot), 14 (pin the Watchman image tag).
 
+Added later on 2026-11-07 for the launch: `apps/bot` (WhatsApp Cloud API + Telegram), the landing page CTA, `docs/LAUNCH.md` with the Meta and Railway steps only Punit can do.
+
 ## Not built
 
-- Telegram bot (Phase 1b, next item on `docs/ROADMAP.md`).
 - Phase 2: web console as an app, report page, trace graph, PDF export; Postgres and Redis.
 - Phase 3: full REST API with keys and OpenAPI, npm SDK, Solidity ReceiveGuard, nightly re-screen, pitch and demo script.
 - Phase 4 (needs a go-ahead): WhatsApp, Bitcoin, paid vendors, IVMS101, signed attestations, white label.

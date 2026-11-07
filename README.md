@@ -26,7 +26,9 @@ Working today, offline against recorded fixtures and online against public RPCs:
 
 - Identity layer (Phase 1b, 2026-11-07): originator name screening through a self-hosted moov-io/watchman (`docker compose up -d watchman`, `WATCHMAN_URL`), OFAC, US CSL, EU, UK and UN lists; `HB_ORIGINATOR_SANCTIONED` at or above the 0.80 match line, `IDENTITY_PEP` on PEP lists, a stated near-miss review band, `watchman` coverage line; `pnpm screen ... -o "<name>" --dob <date>`, `originator` on `POST /v1/screen`, `pnpm verify:watchman`
 
-Not yet: Telegram bot (next, Phase 1b). Daily build paused 2026-11-07; `docs/HANDOVER.md` has the live state, the pending Railway deploy and how to resume, web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
+- Bot (2026-11-07): `apps/bot`, one process with a WhatsApp Business Cloud API webhook and a Telegram long-polling transport on grammY, the engine in-process. Send an address, tx hash or explorer link (with "on base", "usdt", an amount); ask what Assay is, which chains, how it scores, what frozen means, pricing. Under 12 lines, 3 free checks a day per salted-hashed user id, `/dev/message` for local testing. Number for the launch: +971 56 462 7605. Go-live steps that only Punit can do (Meta Business, tokens, Railway Deploy): `docs/LAUNCH.md`
+
+Daily build paused 2026-11-07; `docs/HANDOVER.md` has the live state and how to resume, web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
 
 ## Run
 
@@ -53,6 +55,7 @@ No API keys are required. `.env.example` lists optional keys that raise rate lim
 ## Layout
 
 ```
+apps/bot            WhatsApp Cloud API webhook + Telegram (grammY) bot, conversation core, daily quota
 apps/cli            screen + verify-sources
 packages/shared     chains, tokens, address parsing, zod schemas
 packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, freeze-events (index builder + reader), sanctions-oracle, labels, explorer (etherscan-v2, blockscout, routescan, trongrid, tronscan, helius), activity, watchman (identity layer)

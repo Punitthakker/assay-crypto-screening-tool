@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0 - 2026-11-07
+- Bot (`apps/bot`): `Conversation` core independent of the messenger (intent parsing for addresses, hashes, explorer links with chain, asset and amount words; FAQ answers for what Assay is, chains, scoring, frozen, sanctions, pricing; replies capped at 12 lines; `Quota` of 3 checks per UTC day per salted SHA-256 of the user id, unlimited ids and 0 = uncapped). WhatsApp Business Cloud API transport (`GET/POST /webhook/whatsapp`: Meta handshake, optional `X-Hub-Signature-256` check, delivery parsing that ignores statuses and media, text reply with quoted context, mark-as-read, dedupe of Meta retries, 200 before the screen runs). Telegram transport on grammY (`/start`, `/help`, `/check`, `/trace`, plain text in private chats, address-only in groups, inline mode). `/health`, `/dev/message` behind `ASSAY_BOT_DEV=1`. 22 fixture tests (178 total).
+- Landing page: "Ask on WhatsApp" CTA and the number +971 56 462 7605 in the hero, the bot cell and the footer. `railway.json` start command picks the service from `ASSAY_SERVICE` so one repo deploys `assay-api` and `assay-bot`. `.env.example` bot section. `docs/LAUNCH.md`: the go-live checklist.
+
 ## 0.8.1 - 2026-11-07
 - `docs/HANDOVER.md`: state of the product when the daily build was stopped, what is live (Netlify redeployed today from `apps/web`; Railway staged changes waiting for Deploy: `assay-api` on branch `main`, new `watchman` service, `WATCHMAN_URL`), what has never run live, open questions, how to resume.
 

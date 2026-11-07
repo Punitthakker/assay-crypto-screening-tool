@@ -15,7 +15,7 @@ One item per daily build. The scheduled task "Assay daily build" picked the firs
 - [x] Label import scripts (ImMike, eth-phishing-detect, ScamSniffer), mixers, bridges, data/vasps.json, docs/LICENCES.md - shipped 2026-11-05; eth-phishing-detect has no address list (domains only), ScamSniffer is GPL and opt-in (question 9); mixer, bridge and VASP rows need Punit's confirmation (docs/VERIFY.md step 6, question 10)
 - [x] Historic freeze event index ("previously frozen") - shipped 2026-11-06, index must be built live (docs/VERIFY.md step 7), scoring 1.1.0
 - [x] Watchman identity-layer integration via docker-compose (submodule modules/moneybee-risk-datasources) - shipped 2026-11-07 on fixtures, live check pending (docs/VERIFY.md step 8), minMatch policy is question 13
-- [ ] Telegram bot (grammY) in apps/bot
+- [x] Telegram bot (grammY) in apps/bot - shipped 2026-11-07 together with the WhatsApp transport (Phase 4 item pulled forward on Punit's go-ahead for the launch): /check, /trace, /help, inline mode, chain inference, under 12 lines, 3 free checks a day per hashed id; live once the tokens are set (docs/LAUNCH.md)
 
 ## Phase 2
 - [ ] Web console on the published design (apps/web), report page, trace graph, PDF export, demo mode, methodology
@@ -29,4 +29,5 @@ One item per daily build. The scheduled task "Assay daily build" picked the firs
 - [ ] Railway + Netlify configs, docs/PITCH.md, demo script
 
 ## Phase 4 - only with Punit's go-ahead
-- [ ] WhatsApp transport, Bitcoin tracing, paid vendor adapters, IVMS101 ingestion, signed attestations, white-label theming
+- [x] WhatsApp transport (shipped 2026-11-07, Cloud API webhook in apps/bot, docs/LAUNCH.md)
+- [ ] Bitcoin tracing, paid vendor adapters, IVMS101 ingestion, signed attestations, white-label theming
