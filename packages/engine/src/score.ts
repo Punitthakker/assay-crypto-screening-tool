@@ -68,7 +68,7 @@ export function computeScore(evidence: Evidence[], opts: { verdictFloor?: Verdic
 /**
  * Confidence from coverage: see SCORING.md.
  * Required sources for "high": issuer-freeze ok, ofac-sdn ok, chainalysis-oracle ok or not_applicable, lists < 36h.
- * Fund-flow "disabled" or "unavailable" and behaviour "unavailable" cap at "medium"; behaviour "partial"
+ * Fund-flow "disabled" or "unavailable", behaviour "unavailable" and watchman "unavailable" cap at "medium"; behaviour "partial"
  * (a signal or two not evaluated on a keyless deployment) is stated in the coverage line and does not downgrade.
  */
 export function computeConfidence(coverage: Coverage[]): { confidence: Confidence; reasons: string[] } {
@@ -98,6 +98,9 @@ export function computeConfidence(coverage: Coverage[]): { confidence: Confidenc
   else if (flow.status === "partial") downgrade("medium", flow.detail ?? "trace depth or fan-out limited");
   const behaviour = get("behaviour");
   if (behaviour && behaviour.status === "unavailable") downgrade("medium", "behavioural signals not evaluated");
+  // only present when an originator was supplied; "disabled" is a deployment choice and is stated, not penalised
+  const watchman = get("watchman");
+  if (watchman && watchman.status === "unavailable") downgrade("medium", "originator name screening unavailable");
 
   return { confidence: level, reasons };
 }

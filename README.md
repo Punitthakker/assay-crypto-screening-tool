@@ -24,7 +24,9 @@ Working today, offline against recorded fixtures and online against public RPCs:
 - Historic freeze event index (Phase 1b, 2026-11-06): `pnpm index:freeze` reads every `AddedBlackList` / `RemovedBlackList` / `DestroyedBlackFunds` (Tether) and `Blacklisted` / `UnBlacklisted` (Circle) event from the issuer contracts into `data/freeze-index/<chain>-<symbol>.json`, incrementally from a stored cursor, via Etherscan V2, Blockscout or TronGrid; the engine and the trace read it for "previously frozen" (`EXPOSURE_PREVIOUSLY_FROZEN` for counterparties, `EXPOSURE_DIRECT_PREVIOUSLY_FROZEN` at 20 for the sender) and a `freeze-index` coverage line; scoring 1.1.0
 - Label imports (Phase 1b, 2026-11-05): `pnpm import:labels` pulls MIT-licensed phishing, exploit and exchange labels (ImMike aggregator, Forta, etherclust) into `data/labels/imported-*.json`, 6,479 addresses in the store; `data/vasps.json` decides licensed vs unlicensed exchange wallets; Tornado Cash pools and major bridges seeded; `docs/LICENCES.md` lists every dataset and its licence, GPL ScamSniffer is opt-in only
 
-Not yet: Watchman identity layer (next), Telegram bot (Phase 1b), web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
+- Identity layer (Phase 1b, 2026-11-07): originator name screening through a self-hosted moov-io/watchman (`docker compose up -d watchman`, `WATCHMAN_URL`), OFAC, US CSL, EU, UK and UN lists; `HB_ORIGINATOR_SANCTIONED` at or above the 0.80 match line, `IDENTITY_PEP` on PEP lists, a stated near-miss review band, `watchman` coverage line; `pnpm screen ... -o "<name>" --dob <date>`, `originator` on `POST /v1/screen`, `pnpm verify:watchman`
+
+Not yet: Telegram bot (next, Phase 1b), web app (Phase 2), API/SDK (Phase 3). Explorer adapters, the trace and the behavioural signals are tested on fixtures only until `pnpm verify:explorers` and VERIFY.md steps 4 and 5 have been run live (`docs/VERIFY.md`).
 
 ## Run
 
@@ -35,9 +37,12 @@ pnpm verify:sources                         # LIVE: checks every contract, oracl
 pnpm verify:explorers                       # LIVE: one inbound-transfer fetch per chain; writes docs/EXPLORERS.verified.json
 pnpm import:labels                          # refresh data/labels/imported-*.json from the public datasets in docs/LICENCES.md (GitHub only, no keys)
 pnpm index:freeze                           # LIVE: build or refresh data/freeze-index/ from the issuer blacklist events (Etherscan key or Blockscout, TronGrid for Tron)
+docker compose up -d watchman               # identity layer: self-hosted Watchman on 127.0.0.1:8084, then WATCHMAN_URL=http://localhost:8084
+pnpm verify:watchman                        # LIVE: lists loaded plus four originator controls; writes docs/WATCHMAN.verified.json
 pnpm screen TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t -a USDT                       # Tron inferred
 pnpm screen 0x28C6c06298d514Db089934071355E5743bf21d60 -c ethereum -a USDT
 pnpm screen <addr> -c base -a USDC -m 25000  # amount enables the Travel Rule check
+pnpm screen <addr> -c tron -a USDT -m 25000 -o "Full Name" --dob 1990-01-01 --nationality AE   # originator screened through Watchman
 pnpm screen <addr> -c base -a USDC --json
 CR_TRANSPORT=fixture pnpm screen ...         # offline demo mode
 CR_RECORD=1 pnpm screen ...                  # live, and record the responses into data/fixtures/recorded.json
@@ -50,10 +55,11 @@ No API keys are required. `.env.example` lists optional keys that raise rate lim
 ```
 apps/cli            screen + verify-sources
 packages/shared     chains, tokens, address parsing, zod schemas
-packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, freeze-events (index builder + reader), sanctions-oracle, labels, explorer (etherscan-v2, blockscout, routescan, trongrid, tronscan, helius), activity
+packages/datasources transport (live | fixture), adapters: ofac, issuer-freeze, freeze-events (index builder + reader), sanctions-oracle, labels, explorer (etherscan-v2, blockscout, routescan, trongrid, tronscan, helius), activity, watchman (identity layer)
 packages/engine     scoring, orchestration, 2-hop trace (trace.ts), behavioural signals (behaviour.ts), report
 data/labels         seed.json, mixers.json, bridges.json, imported-*.json (pnpm import:labels); data/vasps.json VASP register; data/label-imports.json manifest
-data/fixtures       recorded.json (on-chain responses), ofac-snapshot.json, explorers.json, trace.json, behaviour.json and freeze-index/ (hand-encoded, build-*.ts)
+data/fixtures       recorded.json (on-chain responses), ofac-snapshot.json, explorers.json, trace.json, behaviour.json, watchman.json and freeze-index/ (hand-encoded, build-*.ts)
+docker-compose.yml  watchman (identity layer), api profile; modules/moneybee-risk-datasources holds the Watchman fork as a nested submodule
 data/freeze-index   <chain>-<symbol>.json freeze event tables from pnpm index:freeze (git-ignored until question 12 is decided)
 docs                SOURCES, LICENCES, REGISTRY, SCORING, DECISIONS, VERIFY, QUESTIONS
 ```

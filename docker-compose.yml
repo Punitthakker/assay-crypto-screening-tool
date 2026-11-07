@@ -1,0 +1,55 @@
+# Assay local stack. Today: the identity layer (Watchman name screening). Postgres and Redis land in Phase 2.
+#
+#   docker compose up -d watchman                 # downloads and indexes the lists; first start takes about a minute
+#   until curl -sf http://localhost:8084/v2/listinfo | grep -q us_ofac; do sleep 2; done
+#   WATCHMAN_URL=http://localhost:8084 pnpm verify:watchman
+#   docker compose --profile api up -d            # also runs the Assay API on :8080 against that Watchman
+#
+# Watchman is moov-io/watchman (Apache-2.0), vendored as a submodule under
+# modules/moneybee-risk-datasources/modules/screening/watchman. The image is the upstream build; to run the
+# fork's source instead, replace `image:` with `build: modules/moneybee-risk-datasources/modules/screening/watchman`
+# after `git submodule update --init --recursive`.
+# Watchman's HTTP API is unauthenticated by design: it is bound to localhost here and must never face the internet.
+
+services:
+  watchman:
+    image: moov/watchman:latest
+    container_name: assay-watchman
+    environment:
+      # free, official lists only: OFAC SDN and Non-SDN, US CSL and FinCEN 311, EU, UK, UN. OpenSanctions (PEPs) is paid and stays off.
+      INCLUDED_LISTS: us_ofac,us_csl,eu_csl,uk_csl,un_csl
+      LOG_FORMAT: json
+    ports:
+      - "127.0.0.1:8084:8084"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8084/v2/listinfo | grep -q us_ofac"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    restart: unless-stopped
+
+  api:
+    profiles: ["api"]
+    image: node:22-alpine
+    container_name: assay-api
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cr/api start"
+    environment:
+      PORT: 8080
+      WATCHMAN_URL: http://watchman:8084
+      ASSAY_SELFTEST: "0"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/app
+      - api_node_modules:/app/node_modules
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      watchman:
+        condition: service_healthy
+
+volumes:
+  api_node_modules:

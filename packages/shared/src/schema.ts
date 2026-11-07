@@ -15,6 +15,7 @@ export const OriginatorSchema = z
     isLegalPerson: z.boolean().default(false),
   })
   .strict();
+export type Originator = z.infer<typeof OriginatorSchema>;
 
 export const ScreenRequestSchema = z
   .object({

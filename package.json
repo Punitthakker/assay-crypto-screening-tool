@@ -13,7 +13,8 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "import:labels": "pnpm --filter @cr/cli import:labels",
-    "index:freeze": "pnpm --filter @cr/cli index:freeze"
+    "index:freeze": "pnpm --filter @cr/cli index:freeze",
+    "verify:watchman": "pnpm --filter @cr/cli verify:watchman"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -24,6 +24,7 @@ import {
   LabelStore,
   OfacAdapter,
   SanctionsOracleAdapter,
+  WatchmanAdapter,
   defaultWindow,
   type AdapterResult,
   type Transfer,
@@ -49,6 +50,8 @@ export interface EngineOptions {
   behaviour?: Partial<BehaviourOptions> | false;
   /** historic freeze event index (data/freeze-index by default, built by pnpm index:freeze); false switches "previously frozen" off */
   freezeIndex?: FreezeIndex | false;
+  /** identity layer: originator name screening through a self-hosted Watchman (WATCHMAN_URL); false switches it off */
+  watchman?: WatchmanAdapter | false;
 }
 
 export class Engine {
@@ -62,6 +65,7 @@ export class Engine {
   private activity: ActivityAdapter;
   private behaviourOpts: BehaviourOptions | false;
   private freezeIndex: FreezeIndex | undefined;
+  private watchman: WatchmanAdapter | undefined;
 
   constructor(private opts: EngineOptions) {
     this.ofac = new OfacAdapter(opts.transport);
@@ -75,6 +79,7 @@ export class Engine {
     const env = opts.env ?? process.env;
     this.behaviourOpts = opts.behaviour === false || env.CR_BEHAVIOUR === "0" ? false : { ...DEFAULT_BEHAVIOUR, structuringThresholds: [...new Set([1000, 3000, this.threshold, 10000])], ...(opts.behaviour ?? {}) };
     this.freezeIndex = opts.freezeIndex === false || env.CR_FREEZE_INDEX === "0" ? undefined : (opts.freezeIndex ?? new FreezeIndex(env.CR_FREEZE_INDEX_DIR ? { dir: env.CR_FREEZE_INDEX_DIR } : {}));
+    this.watchman = opts.watchman === false ? undefined : (opts.watchman ?? new WatchmanAdapter(opts.transport, env));
   }
 
   /** Real adapters behind the tracer: explorer for hop 2, labels, the OFAC set, issuer freeze reads. */
@@ -177,17 +182,20 @@ export class Engine {
     const { token, authenticity } = this.resolveToken(req, checkedAt);
     if (authenticity) evidence.push(authenticity);
 
-    // 2. hard-block sources in parallel
-    const [freezeR, ofacR, oracleR] = await Promise.all([
+    // 2. hard-block sources in parallel. The originator name screen (identity layer, SCORING.md 2d) runs
+    //    here too: a sanctioned originator is a hard block, so the trace below is skipped for it as well.
+    const [freezeR, ofacR, oracleR, identityR] = await Promise.all([
       token ? this.freeze.screen(req.address, token) : Promise.resolve<AdapterResult | undefined>(undefined),
       this.ofac.screen(req.address, req.chain),
       this.oracle.screen(req.address, req.chain),
+      req.originator ? this.screenOriginator(req.originator) : Promise.resolve<AdapterResult | undefined>(undefined),
     ]);
-    for (const r of [freezeR, ofacR, oracleR]) {
+    for (const r of [freezeR, ofacR, oracleR, identityR]) {
       if (!r) continue;
       evidence.push(...r.evidence);
       coverage.push(r.coverage);
     }
+    if (Array.isArray(identityR?.facts?.flags)) flags.push(...(identityR.facts.flags as string[]));
     // 2b. the sender's own freeze history from the local index
     if (token) {
       const fh = this.senderFreezeHistory(req.address, token, typeof freezeR?.facts?.frozen === "boolean" ? freezeR.facts.frozen : null, checkedAt);
@@ -263,11 +271,9 @@ export class Engine {
     }
 
     // 5. identity layer
-    let identity: Report["identity"] = "unverified";
-    if (req.originator) {
-      identity = "attested";
-      coverage.push({ source: "watchman", status: "disabled", detail: "name screening lands in Phase 1b" });
-    }
+    //    "attested" means the counterparty VASP supplied originator data and it was name-screened (or the screen
+    //    is stated as disabled or unavailable in coverage); "verified" waits for a KYC attestation (Phase 4).
+    const identity: Report["identity"] = req.originator ? "attested" : "unverified";
     if (req.direction === "inbound" && req.amount !== undefined && req.amount >= this.threshold && !req.originator) {
       verdictFloor = "CAUTION";
       flags.push("TRAVEL_RULE_DATA_REQUIRED");
@@ -308,6 +314,12 @@ export class Engine {
     };
     const reportHash = createHash("sha256").update(JSON.stringify(report)).digest("hex");
     return { report: { ...report, reportHash }, transfers, ...(token ? { token } : {}), ...(trace ? { trace } : {}), ...(behaviour ? { behaviour } : {}) };
+  }
+
+  /** Identity layer: originator name screening. Disabled is stated, never silent. */
+  private async screenOriginator(originator: NonNullable<ScreenRequest["originator"]>): Promise<AdapterResult> {
+    if (!this.watchman) return { evidence: [], coverage: { source: "watchman", status: "disabled", detail: "identity screening switched off" } };
+    return this.watchman.screenOriginator(originator);
   }
 
   /** Outbound transfers, account activity and approvals for the sender, then the 2b signals. Never throws. */

@@ -8,7 +8,8 @@
     "verify:sources": "tsx --tsconfig ../../tsconfig.json src/verify-sources.ts",
     "verify:explorers": "tsx --tsconfig ../../tsconfig.json src/verify-explorers.ts",
     "import:labels": "tsx --tsconfig ../../tsconfig.json src/import-labels.ts",
-    "index:freeze": "tsx --tsconfig ../../tsconfig.json src/index-freeze.ts"
+    "index:freeze": "tsx --tsconfig ../../tsconfig.json src/index-freeze.ts",
+    "verify:watchman": "tsx --tsconfig ../../tsconfig.json src/verify-watchman.ts"
   },
   "dependencies": {
     "@cr/shared": "workspace:*",

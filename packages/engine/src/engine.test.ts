@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeAll } from "vitest";
 import path from "node:path";
 import { Engine } from "./screen.js";
-import { FixtureTransport, FreezeIndex, LabelStore, emptyIndex } from "@cr/datasources";
+import { FixtureTransport, FreezeIndex, LabelStore, WatchmanAdapter, emptyIndex } from "@cr/datasources";
 import { canonicalToken } from "@cr/shared";
 
 const root = path.resolve(import.meta.dirname, "../../..");
@@ -283,5 +283,71 @@ describe("behavioural signals end to end (data/fixtures/behaviour.json)", () => 
   it("a hard-blocked sender skips the behavioural fetches", async () => {
     const r = await engine.screen({ address: "0x0330070FD38Ec3bB94F58FA55D40368271E9e54A", chain: "ethereum", asset: "USDT" });
     expect(r.coverage.find((c) => c.source === "behaviour")?.status).toBe("not_applicable");
+  });
+});
+
+describe("identity layer end to end (data/fixtures/watchman.json)", () => {
+  const BASE = { address: "0x1111111111111111111111111111111111111111", chain: "base", asset: "USDC", amount: 25000 } as const;
+  const mk = (env: NodeJS.ProcessEnv = { WATCHMAN_URL: "http://watchman:8084" }) =>
+    new Engine({
+      transport: new FixtureTransport(path.join(root, "data/fixtures/recorded.json")),
+      labels: new LabelStore(path.join(root, "data/labels")),
+      env: {},
+      watchman: new WatchmanAdapter(new FixtureTransport(path.join(root, "data/fixtures/watchman.json")), env),
+    });
+
+  it("a clean originator lifts the Travel Rule floor, is attested, and leaves one IDENTITY_NAME_CLEAR info line", async () => {
+    const r = await mk().screen({ ...BASE, originator: { name: "Amina Haddad", dateOfBirth: "1988-02-11" } });
+    expect(r.identity).toBe("attested");
+    expect(r.flags).not.toContain("TRAVEL_RULE_DATA_REQUIRED");
+    expect(r.verdict).toBe("CLEAR");
+    expect(r.coverage.find((c) => c.source === "watchman")?.status).toBe("ok");
+    expect(r.evidence.map((e) => e.code)).toContain("IDENTITY_NAME_CLEAR");
+    expect(r.hardBlock).toBeUndefined();
+  });
+
+  it("a sanctioned originator is HB_ORIGINATOR_SANCTIONED, BLOCK, and the trace is skipped", async () => {
+    const r = await mk().screen({ ...BASE, originator: { name: "Dmitry Khoroshev", dateOfBirth: "1993-04-17", nationality: "RU" } });
+    expect(r.hardBlock).toBe("HB_ORIGINATOR_SANCTIONED");
+    expect(r.verdict).toBe("BLOCK");
+    expect(r.score).toBe(100);
+    expect(r.coverage.find((c) => c.source === "fund-flow")?.status).toBe("not_applicable");
+    expect(r.evidence[0]?.ref).toBe("us_ofac:48603");
+  });
+
+  it("a near miss is a flag and an info line, never a block or points", async () => {
+    const r = await mk().screen({ ...BASE, originator: { name: "Dmitry Khoroshev" } });
+    expect(r.hardBlock).toBeUndefined();
+    expect(r.flags).toContain("ORIGINATOR_NAME_REVIEW");
+    expect(r.evidence.find((e) => e.code === "IDENTITY_NAME_REVIEW")?.points).toBe(0);
+    expect(r.verdict).toBe("CLEAR");
+  });
+
+  it("a PEP originator adds 15 points in the identity bucket", async () => {
+    const r = await mk().screen({ ...BASE, originator: { name: "Northbridge Holdings FZE", isLegalPerson: true } });
+    expect(r.evidence.find((e) => e.code === "IDENTITY_PEP")?.points).toBe(15);
+    expect(r.score).toBe(15);
+    expect(r.verdict).toBe("CLEAR");
+  });
+
+  it("without WATCHMAN_URL the screen is stated as disabled and confidence is not downgraded for it", async () => {
+    const r = await mk({}).screen({ ...BASE, originator: { name: "Amina Haddad" } });
+    expect(r.identity).toBe("attested");
+    expect(r.coverage.find((c) => c.source === "watchman")).toMatchObject({ status: "disabled" });
+    expect(r.flags.join()).not.toContain("originator name screening");
+    expect(r.evidence.some((e) => e.source === "watchman")).toBe(false);
+  });
+
+  it("an unreachable Watchman caps confidence at medium and names it", async () => {
+    const r = await mk({ WATCHMAN_URL: "http://nowhere:1" }).screen({ ...BASE, originator: { name: "Amina Haddad" } });
+    expect(r.coverage.find((c) => c.source === "watchman")?.status).toBe("unavailable");
+    expect(r.confidence).not.toBe("high");
+    expect(r.flags.join()).toContain("originator name screening unavailable");
+  });
+
+  it("no originator: no watchman coverage line at all", async () => {
+    const r = await mk().screen({ ...BASE });
+    expect(r.coverage.find((c) => c.source === "watchman")).toBeUndefined();
+    expect(r.flags).toContain("TRAVEL_RULE_DATA_REQUIRED");
   });
 });

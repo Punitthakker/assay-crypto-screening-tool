@@ -2,6 +2,7 @@
  * Assay API - Phase 1 minimal service.
  *   GET  /health            liveness + transport mode
  *   POST /v1/screen         { address, chain, asset, amount?, tokenContract?, originator? } -> Report
+ *                           originator { name, dateOfBirth?, nationality?, nationalId?, isLegalPerson? } is name-screened through Watchman when WATCHMAN_URL is set
  *   POST /v1/lookup         { input, chain?, asset?, amount?, receiver? } -> AddressReport | TxReport
  *                           input: address, tx hash, explorer address link or explorer tx link
  *   GET  /v1/chains         registry summary
@@ -58,7 +59,7 @@ const server = createServer(async (req, res) => {
   const ip = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ?? req.socket.remoteAddress ?? "?";
   if (req.method === "OPTIONS") return send(res, 204, {});
   if (url.pathname === "/health" || url.pathname === "/") {
-    return send(res, 200, { ok: true, service: "assay-api", transport: transport.mode, chains: ENABLED_CHAINS, started, disclaimer: DISCLAIMER });
+    return send(res, 200, { ok: true, service: "assay-api", transport: transport.mode, chains: ENABLED_CHAINS, identity: { watchman: process.env.WATCHMAN_URL ? "configured" : "off" }, started, disclaimer: DISCLAIMER });
   }
   if (url.pathname === "/v1/chains") {
     return send(res, 200, { chains: ENABLED_CHAINS.map((id) => ({ id, name: CHAINS[id].name, family: CHAINS[id].family, tokens: TOKENS.filter((t) => t.chain === id).map((t) => ({ symbol: t.symbol, onChainSymbol: t.onChainSymbol, issuer: t.issuer, kind: t.kind, address: t.address })) })) });

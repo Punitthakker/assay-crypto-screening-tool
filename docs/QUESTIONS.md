@@ -2,6 +2,10 @@
 
 Answer inline or in DECISIONS.md. Items stay here until decided.
 
+## 2026-11-07
+13. Watchman match line. The originator name screen blocks at `WATCHMAN_MIN_MATCH=0.80` (Watchman's published production line, precision about 0.99 on their labelled set) and reports a near miss for manual review between 0.59 and 0.80 (`ORIGINATOR_NAME_REVIEW`, no points). A name alone, with no date of birth or ID, usually sits in that review band, so a counterparty VASP that sends only a name will rarely trigger the hard block. Keep 0.80 and push VASPs to send date of birth or an ID (which scores 1.0 on a match), or lower the line to 0.59 for the pilot and accept more false positives? Also: PEP hits are 15 points today but no free list carries PEPs; OpenSanctions (CC BY-NC) is the paid route when you want them.
+14. Watchman image tag. `docker-compose.yml` runs `moov/watchman:latest` because the sandbox cannot see Docker Hub tags. After your first `docker compose pull`, tell me the version it resolved to (`docker inspect assay-watchman | grep -i version`) so I can pin it; `latest` on a compliance dependency is not where this should stay.
+
 ## 2026-11-06
 11. Index versus live read. When the issuer freeze read fails (RPC down, rate limit) and the local freeze index still lists the sender with no later removal, the report today adds an info line and the `FREEZE_INDEX_SAYS_LISTED` flag but keeps the score. Counterparties in the same state count as `frozen` (60 points). Do you want the sender case to be a hard block too (the index is the issuer's own record, at most a day old), or stay a flag so a stale table can never BLOCK on its own? One line in `senderFreezeHistory`.
 12. Where the freeze index lives. `pnpm index:freeze` writes `data/freeze-index/` (git-ignored today). Options: commit the files after your first live build so every deploy and the fixture demo have history (a few MB, real addresses, refreshed by a daily commit), or keep it out of git and build it on Railway at boot or by a nightly job (Phase 3 item). The engine does not care; the choice is about whether real blacklisted addresses sit in the repo.

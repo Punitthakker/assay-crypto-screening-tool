@@ -48,8 +48,9 @@ Status key: VERIFIED (confirmed against issuer source today), LIVE-CHECK (addres
 | Chainalysis Sanctions Oracle | `0x40C57923924B5c5c5455c48D93317139ADDaC8fb` on Ethereum, Polygon, BNB Chain, Avalanche, Arbitrum, Optimism, Fantom, Celo, Blast. Base: `0x3A91A31cB3dC49b4db9Ce721F50a9D076c8D739B`. `isSanctioned(address) view returns (bool)` | VERIFIED (addresses from Chainalysis-published docs mirrored in a public issue; official page not fetchable from sandbox) | Free, no customer relationship. Chainalysis disclaims timeliness. Treat as second source, never sole source. |
 | Scorechain free sanctions API | `https://www.scorechain.com/developers/free-sanction-api` | VERIFIED (terms) | Non-commercial, 100 req/hr. Adapter default OFF. Must not be in production path. |
 | TRM free sanctions API | on request | OPEN | Stub only. |
-| UN consolidated list | `https://scsanctions.un.org/resources/xml/en/consolidated.xml` | VERIFIED (from moneybee-risk-datasources LIVE_DATA.md) | Name list, Identity layer via Watchman. |
-| UAE Local Terrorist List (EOCN) | via OpenSanctions dataset `ae_local_terrorists` or EOCN source | VERIFIED (reference) | Name list, Identity layer. |
+| UN consolidated list | `https://scsanctions.un.org/resources/xml/en/consolidated.xml` | VERIFIED (from moneybee-risk-datasources LIVE_DATA.md) | Name list, Identity layer via Watchman (`un_csl`). |
+| UAE Local Terrorist List (EOCN) | via OpenSanctions dataset `ae_local_terrorists` or EOCN source | VERIFIED (reference) | Name list, Identity layer. Not in Watchman's free list set; OpenSanctions is paid (CC BY-NC). OPEN. |
+| moov-io/watchman name screening (identity layer, added 2026-11-07) | self-hosted, `GET /v2/search` and `/v2/listinfo` on `WATCHMAN_URL`; lists `us_ofac,us_csl,eu_csl,uk_csl,un_csl` loaded by Watchman itself from the official sources | FIXTURE-TESTED, live check VERIFY.md step 8 | Apache-2.0 software, official public lists. Adapter: `WatchmanAdapter` (`packages/datasources/src/adapters/watchman.ts`). Originator only today; the VASP entity name follows once the bot or API carries one. |
 
 ## Attribution and labels
 

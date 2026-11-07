@@ -15,11 +15,16 @@ const program = new Command()
   .option("-a, --asset <asset>", "USDT | USDC", "USDT")
   .option("-m, --amount <n>", "amount in token units (enables Travel Rule check)", (v) => Number(v))
   .option("-t, --token <contract>", "token contract you are about to receive (authenticity check)")
+  .option("-o, --originator <name>", "originator name for the identity layer (screened through Watchman when WATCHMAN_URL is set)")
+  .option("--dob <yyyy-mm-dd>", "originator date of birth")
+  .option("--nationality <cc>", "originator nationality, ISO 3166-1 alpha-2")
+  .option("--national-id <id>", "originator national ID or passport number (with --nationality)")
+  .option("--legal-person", "originator is a company, not a natural person")
   .option("--json", "print raw JSON report")
   .option("--fixture", "use recorded fixtures instead of the network (same as CR_TRANSPORT=fixture)")
   .parse();
 
-const opts = program.opts<{ chain?: string; asset: string; amount?: number; token?: string; json?: boolean; fixture?: boolean }>();
+const opts = program.opts<{ chain?: string; asset: string; amount?: number; token?: string; originator?: string; dob?: string; nationality?: string; nationalId?: string; legalPerson?: boolean; json?: boolean; fixture?: boolean }>();
 const [address] = program.args as [string];
 
 let chain = opts.chain;
@@ -47,6 +52,17 @@ try {
     asset: opts.asset.toUpperCase(),
     ...(opts.amount !== undefined ? { amount: opts.amount } : {}),
     ...(opts.token ? { tokenContract: opts.token } : {}),
+    ...(opts.originator
+      ? {
+          originator: {
+            name: opts.originator,
+            ...(opts.dob ? { dateOfBirth: opts.dob } : {}),
+            ...(opts.nationality ? { nationality: opts.nationality } : {}),
+            ...(opts.nationalId ? { nationalId: opts.nationalId } : {}),
+            isLegalPerson: Boolean(opts.legalPerson),
+          },
+        }
+      : {}),
   });
   if (opts.json) {
     console.log(JSON.stringify(report, null, 2));

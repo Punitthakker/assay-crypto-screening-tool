@@ -96,6 +96,8 @@ Implemented 2026-11-04 (`packages/engine/src/behaviour.ts`, inputs from `package
 | `originator` provided, PEP hit (paid feed) | +15 |
 | Corporate originator, no LEI or opaque ownership chain | +10 |
 
+Implemented 2026-11-07 (`packages/datasources/src/adapters/watchman.ts`, self-hosted moov-io/watchman v2 API, `WATCHMAN_URL`): the originator is screened in parallel with the on-chain hard-block sources, so a sanctioned originator also skips the trace. A hit at or above `WATCHMAN_MIN_MATCH` (0.80) on a sanctions list is `HB_ORIGINATOR_SANCTIONED`; on a list whose name contains "pep" it is `IDENTITY_PEP` (+15, identity cap 25; no free list carries PEPs, so this needs OpenSanctions). A best score between `WATCHMAN_REVIEW_MATCH` (0.59) and the match line is `IDENTITY_NAME_REVIEW` (info, flag `ORIGINATOR_NAME_REVIEW`, no points); otherwise `IDENTITY_NAME_CLEAR` (info). Person queries send name, date of birth and `gov_national` as COUNTRY:ID; a matching ID scores 1.0 in Watchman. The opaque-ownership row (+10) is not implemented: it needs the GLEIF look-through. Coverage `watchman` is `ok`, `disabled` (no URL, stated, no confidence change) or `unavailable` (confidence capped at medium). Scoring version unchanged: the rows above were already published, only now evaluated.
+
 ### Final
 
 `score = min(95, exposure + behavioural + asset + identity)` then band mapping, then verdict floors applied.
